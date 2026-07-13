@@ -986,7 +986,7 @@
                 const tag = r.tag.replace(/"/g, '""');
                 const reflection = r.reflection.replace(/"/g, '""');
                 
-                csvContent += `"${date}","${asset}","${r.session}","${r.score}","${tag}","${reflection}"\n`;
+                csvContent += `"${r.date}","${asset}","${r.session}","${r.score}","${tag}","${reflection}"\n`;
             });
 
             // 获取本地时区的当前日期，用于生成文件名（不含星期）
