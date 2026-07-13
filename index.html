@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日交易执行检查表</title>
+    <!-- 引入 Tailwind CSS 构建现代化 UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+        .fade-enter {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen py-8 px-4 flex flex-col items-center justify-start gap-6">
+
+    <!-- 主检查表卡片 -->
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden card transition-all duration-300">
+        
+        <!-- 头部：交易基本信息 -->
+        <div class="bg-slate-900 text-white p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">每日交易 execution 检查表</h1>
+                    <p class="text-slate-400 text-xs mt-1.5">客观评估交易执行，在不确定性中坚守纪律。</p>
+                </div>
+                <div class="no-print flex gap-2">
+                    <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 shadow-lg shadow-emerald-900/20">
+                        导出 PDF / 打印
+                    </button>
+                    <button onclick="resetForm()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95">
+                        重置表单
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 基础元数据输入区 -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-6 border-t border-slate-800">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">交易日期</label>
+                    <input type="date" id="trade-date" class="w-full mt-1.5 bg-slate-800/50 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <span id="day-of-week" class="text-[10px] text-emerald-400 font-semibold mt-1 block"></span>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">交易品种</label>
+                    <input type="text" id="trade-asset" placeholder="例如: EURUSD" class="w-full mt-1.5 bg-slate-800/50 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">交易时段</label>
+                    <select id="trade-session" class="w-full mt-1.5 bg-slate-800/50 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">选择时段...</option>
+                        <option value="Asia">亚洲时段 (Asia)</option>
+                        <option value="London">伦敦时段 (London)</option>
+                        <option value="NY_AM">纽约 AM 时段</option>
+                        <option value="NY_PM">纽约 PM 时段</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主体步骤 -->
+        <div class="p-6 md:p-8 space-y-8">
+            
+            <!-- 第一步：有效信号判定 -->
+            <section class="space-y-3">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs">01</span>
+                    <h2 class="text-base font-bold text-slate-900">判定今日有效信号 <span class="text-xs text-slate-400 font-normal">（点亮代表情况满足，不选默认为未发生）</span></h2>
+                </div>
+                
+                <!-- 三合一极简单排选项 -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button id="btn-s1" onclick="toggleSignal('s1')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center">
+                        KillZone 时段
+                    </button>
+                    <button id="btn-s2" onclick="toggleSignal('s2')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center">
+                        已清扫关键流动性
+                    </button>
+                    <button id="btn-s3" onclick="toggleSignal('s3')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center">
+                        快速反应形成 iFvg
+                    </button>
+                </div>
+            </section>
+
+            <!-- 第二步：执行情况（始终可见） -->
+            <section id="section-step2" class="space-y-4">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs">02</span>
+                    <h2 class="text-base font-bold text-slate-900">今日执行情况记录</h2>
+                </div>
+                
+                <div class="space-y-2">
+                    <span class="text-[10px] font-bold text-indigo-600 block uppercase tracking-wider">E1 执行状态</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button id="btn-e1-yes" onclick="selectE1('yes')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-[0.98]">
+                            我入场交易了
+                        </button>
+                        <button id="btn-e1-no" onclick="selectE1('no')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-[0.98]">
+                            我没有入场（选择空仓观望）
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 逻辑结果横幅反馈区 -->
+                <div id="feedback-banner" class="hidden fade-enter">
+                    <div id="feedback-banner-box" class="rounded-xl p-4 border text-xs sm:text-sm font-semibold flex flex-col gap-1">
+                        <span id="feedback-banner-title">--</span>
+                        <span id="feedback-banner-desc" class="text-xs font-normal opacity-90">--</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 第三步：操作评分表（仅在 有有效信号 且 入场交易 时呈现） -->
+            <section id="section-step3" class="hidden space-y-6 fade-enter">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs">03</span>
+                    <h2 class="text-base font-bold text-slate-900">操作精细化评分</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 执行纪律（6分） -->
+                    <div class="border border-slate-100 rounded-2xl p-5 space-y-4 bg-white shadow-sm">
+                        <div class="flex items-center justify-between border-b border-slate-50 pb-2">
+                            <h3 class="font-bold text-slate-900 text-sm">▎ 执行纪律 (Max 6分)</h3>
+                            <span class="text-emerald-600 text-xs font-bold" id="discipline-subtotal">小计: 0 / 6</span>
+                        </div>
+                        
+                        <!-- D1 入场 -->
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">D1. 入场精确度</span>
+                            <div class="grid grid-cols-1 gap-1.5">
+                                <button id="btn-d1-3" onclick="selectD1('3')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
+                                    及时无误入场 <span class="float-right text-slate-400 text-[10px]">3 分</span>
+                                </button>
+                                <button id="btn-d1-1" onclick="selectD1('1')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
+                                    略有犹豫，延迟 1-2 根 K 线 <span class="float-right text-slate-400 text-[10px]">1 分</span>
+                                </button>
+                                <button id="btn-d1-0" onclick="selectD1('0')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
+                                    提前抢跑 或 严重滞后延迟 <span class="float-right text-slate-400 text-[10px]">0 分</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- D2 持仓 -->
+                        <div class="space-y-2 pt-2 border-t border-slate-50">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">D2. 持仓规范度</span>
+                            <div class="grid grid-cols-1 gap-1.5">
+                                <button id="btn-d2-3" onclick="selectD2('3')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
+                                    完美持有，无乱拉保本、无手动提前离场 <span class="float-right text-slate-400 text-[10px]">3 分</span>
+                                </button>
+                                <button id="btn-d2-0" onclick="selectD2('0')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
+                                    出现任何形式的主动干预 / 恐慌手动离场 <span class="float-right text-slate-400 text-[10px]">0 分</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 机会质量加分（4分） -->
+                    <div class="border border-slate-100 rounded-2xl p-5 space-y-4 bg-white shadow-sm">
+                        <div class="flex items-center justify-between border-b border-slate-50 pb-2">
+                            <h3 class="font-bold text-slate-900 text-sm">▎ 机会质量 (Max 4分)</h3>
+                            <span class="text-emerald-600 text-xs font-bold" id="quality-subtotal">小计: 3 / 4</span>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <!-- 自动同步激活的三个核心信号指标（全部为1分） -->
+                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold">
+                                <span>Q1. KillZone 时段</span>
+                                <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold">
+                                <span>Q2. 清扫关键流动性</span>
+                                <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold">
+                                <span>Q3. 7 根 K 线内 iFvg</span>
+                                <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
+                            </div>
+
+                            <!-- Q4, Q5 手动微调项（0.5分） -->
+                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50">
+                                <button id="btn-q4" onclick="toggleQuality('q4')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
+                                    出现 CISD <span class="block text-[10px] text-slate-400 mt-0.5">+0.5 分</span>
+                                </button>
+                                <button id="btn-q5" onclick="toggleQuality('q5')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
+                                    出现 SMT <span class="block text-[10px] text-slate-400 mt-0.5">+0.5 分</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 结果得分展示 (在选择 E1 后动态显示) -->
+            <section id="section-score" class="hidden bg-slate-900 text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 fade-enter">
+                <div>
+                    <h3 class="text-sm font-bold tracking-tight">📊 今日交易执行得分</h3>
+                    <p class="text-slate-400 text-[10px] mt-1">计算公式：执行纪律 (D1+D2) + 机会质量 (Q1~Q5)</p>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span class="text-4xl font-extrabold text-slate-200" id="total-score-display">--</span>
+                    <span class="text-slate-600 text-lg">/ 10</span>
+                </div>
+            </section>
+
+            <!-- 总结反思 (在选择 E1 后动态显示) -->
+            <section id="section-reflection" class="hidden space-y-4 fade-enter">
+                <div class="flex items-center justify-between">
+                    <label for="reflection" class="block font-bold text-slate-900 text-sm">一句话复盘</label>
+                    <span id="reflection-prompt-tag" class="text-[10px] font-bold px-2.5 py-0.5 rounded-lg">--</span>
+                </div>
+                
+                <!-- 动态引导思考文本块 -->
+                <div id="reflection-hint-box" class="p-4 bg-slate-50 border border-slate-200/60 rounded-xl text-xs text-slate-600 leading-relaxed space-y-1">
+                    <p class="font-bold text-slate-700 flex items-center gap-1">💡 复盘核心引导：</p>
+                    <p id="reflection-hint-desc" class="italic">请选择上方执行情况以获取个性化心智引导提示。</p>
+                </div>
+
+                <textarea id="reflection" rows="3" placeholder="写下今天最值得改进的一点：如情绪变化、迟疑细节，或是总结今天的客观执行力..." class="w-full border border-slate-200 rounded-xl p-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-400 transition-all bg-slate-50 focus:bg-white"></textarea>
+                
+                <!-- 保存复盘按钮 -->
+                <div class="pt-2 flex justify-end no-print">
+                    <button onclick="saveRecord()" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-md shadow-slate-900/10">
+                        💾 保存今日复盘记录
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 历史复盘记录卡片 -->
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden card transition-all duration-300 no-print">
+        <div class="p-6 md:p-8 space-y-4">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <h2 class="text-base font-bold text-slate-900">📋 历史复盘记录</h2>
+                    <!-- 云端状态指示标签 -->
+                    <span id="cloud-header-badge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-md text-slate-400 bg-slate-100 border border-slate-200 transition-all">
+                        ☁️ 离线缓存
+                    </span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleCloudSettings()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-1">
+                        ☁️ 云同步设置
+                    </button>
+                    <button onclick="exportToExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95">
+                        导出 EXCEL
+                    </button>
+                    <button onclick="clearAllRecords()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95">
+                        全部清空
+                    </button>
+                </div>
+            </div>
+
+            <!-- 云端同步配置折叠面板 (新增) -->
+            <div id="cloud-settings-panel" class="hidden border border-dashed border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-slate-800">☁️ GitHub Gist 云同步配置</h3>
+                    <span id="cloud-config-status" class="text-[10px] font-bold text-slate-400">未配置</span>
+                </div>
+                <p class="text-[10px] text-slate-400 leading-normal">
+                    Token 仅保存在您本地，网页通过浏览器安全沙箱直连 GitHub，不经过任何中转服务器。
+                    <a href="https://github.com/settings/tokens" target="_blank" class="text-indigo-600 hover:underline font-semibold ml-1">去申请 Token</a> (必须勾选 <strong>gist</strong> 权限)。
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-500">GitHub Personal Token</label>
+                        <input type="password" id="cloud-token" placeholder="ghp_xxxxxxxxxxxx" class="w-full mt-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-500">Gist ID (云端数据文件标示)</label>
+                        <div class="flex gap-1.5 mt-1">
+                            <input type="text" id="cloud-gist-id" placeholder="填写已有 ID 或点击自动创建" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <button id="btn-auto-create-gist" onclick="handleAutoCreateGist()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 rounded-lg text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all">
+                                自动创建
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-200/50">
+                    <span id="cloud-status-indicator" class="text-[10px] font-medium text-slate-500">提示：双向自动合并算法将安全合并多台设备的数据</span>
+                    <div class="flex gap-2">
+                        <button onclick="testAndSaveCloudSettings()" class="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all">
+                            验证并保存
+                        </button>
+                        <button onclick="toggleCloudSettings()" class="border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all">
+                            取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 表格区域 -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                            <th class="py-3 px-2">日期 & 星期</th>
+                            <th class="py-3 px-2">交易标的</th>
+                            <th class="py-3 px-2">交易时段</th>
+                            <th class="py-3 px-2 text-center">总得分</th>
+                            <th class="py-3 px-2">执行标签</th>
+                            <th class="py-3 px-2 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body" class="divide-y divide-slate-50 font-medium text-slate-700">
+                        <!-- 由 JavaScript 动态追加 -->
+                    </tbody>
+                </table>
+                <div id="no-history-msg" class="text-center py-10 text-slate-400 text-xs hidden">
+                    暂无本地复盘记录。请在上方输入信息、评测后，点击“保存今日复盘记录”进行归档。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 核心逻辑 -->
+    <script>
+        // 初始化载入本地存储数据
+        let records = JSON.parse(localStorage.getItem('trading_checklist_history')) || [];
+
+        // 初始化日期以及星期几
+        const dateInput = document.getElementById('trade-date');
+        dateInput.valueAsDate = new Date();
+        updateDayOfWeek();
+
+        // 绑定日期监听事件
+        dateInput.addEventListener('change', updateDayOfWeek);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // 初始化载入云端参数
+            loadCloudConfig();
+            renderHistory();
+            // 如果已配置云端，加载时自动静默双向拉取合并数据
+            if (hasCloudConfig()) {
+                syncGist('pull');
+            }
+        });
+
+        // 计算并显示星期几
+        function updateDayOfWeek() {
+            const dateVal = dateInput.value;
+            const dayOfWeekEl = document.getElementById('day-of-week');
+            if (dateVal) {
+                const dateObj = new Date(dateVal + 'T00:00:00');
+                const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                dayOfWeekEl.textContent = weekDays[dateObj.getDay()];
+            } else {
+                dayOfWeekEl.textContent = '';
+            }
+        }
+
+        // 统一业务状态机
+        let state = {
+            s1: false, 
+            s2: false,
+            s3: false,
+            e1: null,  
+            d1: null,  
+            d2: null,  
+            q4: false,
+            q5: false
+        };
+
+        // 处理第一步：3个核心信号开关判定
+        function toggleSignal(key) {
+            state[key] = !state[key];
+            const btn = document.getElementById(`btn-${key}`);
+            
+            if (state[key]) {
+                btn.className = "p-4 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center shadow-md shadow-emerald-600/15";
+            } else {
+                btn.className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
+            }
+            
+            runFlow();
+        }
+
+        // 处理第二步：入场状态记录
+        function selectE1(val) {
+            state.e1 = val;
+            
+            // 样式清除与更新
+            document.getElementById('btn-e1-yes').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
+            document.getElementById('btn-e1-no').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
+
+            const btn = document.getElementById(`btn-e1-${val}`);
+            if (val === 'yes') {
+                btn.className = "w-full text-left p-3.5 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-emerald-600/10";
+            } else {
+                btn.className = "w-full text-left p-3.5 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-slate-800/10";
+            }
+
+            runFlow();
+        }
+
+        // 评分卡片 - D1 选择
+        function selectD1(val) {
+            state.d1 = val;
+            const btns = document.querySelectorAll('[id^="btn-d1-"]');
+            btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+            
+            const activeBtn = document.getElementById(`btn-d1-${val}`);
+            if (val === '3' || val === '1') {
+                activeBtn.className = "w-full text-left p-3 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all";
+            } else {
+                activeBtn.className = "w-full text-left p-3 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all";
+            }
+            runFlow(); 
+        }
+
+        // 评分卡片 - D2 选择
+        function selectD2(val) {
+            state.d2 = val;
+            const btns = document.querySelectorAll('[id^="btn-d2-"]');
+            btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+            
+            const activeBtn = document.getElementById(`btn-d2-${val}`);
+            if (val === '3') {
+                activeBtn.className = "w-full text-left p-3 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all";
+            } else {
+                activeBtn.className = "w-full text-left p-3 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all";
+            }
+            runFlow(); 
+        }
+
+        // 加分卡片 - Q4, Q5 选择
+        function toggleQuality(id) {
+            state[id] = !state[id];
+            const btn = document.getElementById(`btn-${id}`);
+            if (state[id]) {
+                btn.className = "w-full text-left p-3 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all";
+            } else {
+                btn.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all";
+            }
+            runFlow(); 
+        }
+
+        // 核心运行工作流逻辑
+        function runFlow() {
+            if (state.e1 === null) {
+                hideElement('feedback-banner');
+                hideElement('section-step3');
+                hideElement('section-score');
+                hideElement('section-reflection');
+                return;
+            }
+
+            const hasSignal = (state.s1 && state.s2 && state.s3);
+            const selectedSignalCount = [state.s1, state.s2, state.s3].filter(Boolean).length;
+
+            showElement('feedback-banner');
+            showElement('section-reflection');
+            showElement('section-score');
+
+            const hintDescEl = document.getElementById('reflection-hint-desc');
+            const hintTagEl = document.getElementById('reflection-prompt-tag');
+
+            if (hasSignal) {
+                if (state.e1 === 'yes') {
+                    updateBanner("ok", "系统判定：今日出现有效信号，且已按计划入场交易。", "请在第三步完成精细化评分。");
+                    showElement('section-step3');
+                    calculateScore();
+
+                    if (state.d1 === null || state.d2 === null) {
+                        hintDescEl.textContent = "今日出现有效信号且你已按计划入场。请在上方第三步完成「入场精确度 (D1)」和「持仓规范度 (D2)」的细分选择，系统将为你动态解锁深度行为反思引导。";
+                        hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-slate-600 bg-slate-100 border border-slate-200";
+                        hintTagEl.textContent = "待完成细分打分";
+                    } else {
+                        if (state.d1 === '3' && state.d2 === '3') {
+                            hintDescEl.textContent = "完美的知行合一！今日不仅信号完备，你的入场时机与持仓定力也无可挑剔。请保持这种宁静、纯粹的执行力。记录下此时稳定的心理状态，这便是你走向稳定盈利的基石！";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-emerald-700 bg-emerald-50 border border-emerald-100";
+                            hintTagEl.textContent = "完美执行 / 卓越交易";
+                        } 
+                        else if (state.d1 === '3' && state.d2 === '0') {
+                            hintDescEl.textContent = "你的入场时机非常精准，但持仓中途出现了恐慌性的违规干预（如乱移保本、手动提早离场）。请深度反思：是什么引发了你在中途的焦虑？是过度盯盘放大了情绪，还是对预设止损缺乏信念？如何训练自己“离屏静候”？";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100";
+                            hintTagEl.textContent = "入场精准 / 持仓慌乱";
+                        } 
+                        else if (state.d1 === '1' && state.d2 === '3') {
+                            hintDescEl.textContent = "你的持仓规范度极佳，但入场时由于迟疑延迟了 1-2 根K线。当时为什么产生了犹豫？是害怕这笔交易会亏损，还是在等待根本不存在的“百分百确认”？如何建立看到触发信号即刻无脑扣动扳机的心理肌肉记忆？";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100";
+                            hintTagEl.textContent = "入场微犹豫 / 持仓稳健";
+                        } 
+                        else if (state.d1 === '1' && state.d2 === '0') {
+                            hintDescEl.textContent = "整笔交易虽然基于正确信号，但执行过程两端松动——入场迟疑拖拉，持仓心慌乱动。这说明你的心态正处于极度紧绷和游离状态。复盘重点：今天的仓位是不是过重了？是不是背负了不该背负的近期亏损压力？请降低仓位找回舒适感。";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                            hintTagEl.textContent = "规则松动 / 双重失守";
+                        } 
+                        else if (state.d1 === '0' && state.d2 === '3') {
+                            hintDescEl.textContent = "虽然你后面完美坚持了持仓，但入场犯了严重错误（抢跑或严重延迟）。如果是抢跑，是否是因为害怕踏空的 FOMO 心理作祟？如果是延迟，是注意力不集中，还是明知规则不符仍带有赌博性试探？无序的入场极易在震荡市中被快速消灭。";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100";
+                            hintTagEl.textContent = "入场违规 / 持仓优秀";
+                        } 
+                        else if (state.d1 === '0' && state.d2 === '0') {
+                            hintDescEl.textContent = "虽然市场给出了完美信号，但你用极糟糕的方式完成了它：抢跑或严重落后，并在中途极度恐慌乱加干预。这是一场彻底被贪婪和恐惧彻底绑架的交易。请立刻停下来！今天让你如此失控的核心诱因是什么？生活压力、仓位失控，还是账户连续亏损？";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                            hintTagEl.textContent = "极度违规 / 纪律失控";
+                        }
+                    }
+                } else {
+                    updateBanner("error", "系统判定：今日出现有效信号，但未入场错失交易。", "执行得分判定为 0 分（犹豫 / 恐惧心理作祟）。");
+                    hideElement('section-step3');
+                    updateScoreDisplay(0);
+
+                    hintDescEl.textContent = "核心交易信号全部齐备，但你却没有入场。请深度反思：当时是什么阻止了你？是因为害怕亏损、对上一笔亏损的阴影、过度迟疑，还是对规则产生了不必要的怀疑？下一次面临相同的标准信号，应如何果断执行？";
+                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                    hintTagEl.textContent = "错失交易";
+                }
+            } else {
+                hideElement('section-step3');
+                if (state.e1 === 'yes') {
+                    updateBanner("error", "系统判定：无有效信号违规强行入场！", "执行得分判定为 0 分（破坏无信号不交易核心纪律）。");
+                    updateScoreDisplay(0);
+
+                    if (selectedSignalCount > 0) {
+                        hintDescEl.textContent = `在信号不完整（仅满足 ${selectedSignalCount}/3 个条件）的情况下，你急忙冲入了市场。为什么会如此心急？是否陷入了 FOMO（害怕错过）、急于挽回之前亏损的报复性心态？有哪些你本应注意并过滤的危险细节被你视而不见了？`;
+                    } else {
+                        hintDescEl.textContent = "今日完全没有出现任何系统信号，你却盲目入场了。为什么？是否因为无聊想操作、频繁交易，或者完全被盘面的波动带偏了节奏？是什么让你无法耐下心来等待属于你的确定性？";
+                    }
+                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                    hintTagEl.textContent = "违规强进";
+                } else {
+                    updateBanner("success", "系统判定：今日无信号，严格执行空仓守纪！", "执行得分判定为 10 分（无信号不交易是最高阶的纪律）。");
+                    updateScoreDisplay(10);
+
+                    hintDescEl.textContent = "极佳的空仓定力！无信号时不随意出手，是迈向稳定盈利最核心、也最难的一步。复盘重点：今天在没有信号的时间里，内心是否有过动摇和瘙痒？你是如何成功克制并安抚内心的交易欲望、平静耐心地观盘或关掉电脑的？";
+                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-indigo-700 bg-indigo-50 border border-indigo-100";
+                    hintTagEl.textContent = "空仓守纪";
+                }
+            }
+        }
+
+        function showElement(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hideElement(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // 横幅展示器更新
+        function updateBanner(type, title, desc) {
+            const box = document.getElementById('feedback-banner-box');
+            document.getElementById('feedback-banner-title').textContent = title;
+            document.getElementById('feedback-banner-desc').textContent = desc;
+
+            if (type === "success") {
+                box.className = "rounded-xl p-4 border border-emerald-500 bg-emerald-50/20 text-emerald-950 text-xs sm:text-sm font-semibold flex flex-col gap-1";
+            } else if (type === "error") {
+                box.className = "rounded-xl p-4 border border-rose-200 bg-rose-50 text-rose-950 text-xs sm:text-sm font-semibold flex flex-col gap-1";
+            } else {
+                box.className = "rounded-xl p-4 border border-slate-700 bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold flex flex-col gap-1";
+            }
+        }
+
+        // 打分机制算法
+        function calculateScore() {
+            const d1Val = parseInt(state.d1 || 0);
+            const d2Val = parseInt(state.d2 || 0);
+            const disciplineSub = d1Val + d2Val;
+            document.getElementById('discipline-subtotal').textContent = `小计: ${disciplineSub} / 6`;
+
+            let qualitySub = 3; 
+            if (state.q4) qualitySub += 0.5;
+            if (state.q5) qualitySub += 0.5;
+            document.getElementById('quality-subtotal').textContent = `小计: ${qualitySub} / 4`;
+
+            updateScoreDisplay(disciplineSub + qualitySub);
+        }
+
+        // 数值更新
+        function updateScoreDisplay(score) {
+            const scoreEl = document.getElementById('total-score-display');
+            scoreEl.textContent = score;
+            if (score === 10) {
+                scoreEl.className = "text-4xl font-extrabold text-emerald-500 transition-all duration-300";
+            } else if (score === 0) {
+                scoreEl.className = "text-4xl font-extrabold text-rose-500 transition-all duration-300";
+            } else {
+                scoreEl.className = "text-4xl font-extrabold text-slate-200 transition-all duration-300";
+            }
+        }
+
+        // ------------------ 💾 GitHub Gist 云端同步逻辑 ------------------
+
+        let cloudConfig = {
+            token: "",
+            gistId: "",
+            status: "DISCONNECTED" // DISCONNECTED, CONNECTING, SYNCING, SUCCESS, OFFLINE
+        };
+
+        function toggleCloudSettings() {
+            const panel = document.getElementById('cloud-settings-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        // 获取本地云端配置
+        function loadCloudConfig() {
+            cloudConfig.token = localStorage.getItem('checklist_gist_token') || "";
+            cloudConfig.gistId = localStorage.getItem('checklist_gist_id') || "";
+            
+            document.getElementById('cloud-token').value = cloudConfig.token;
+            document.getElementById('cloud-gist-id').value = cloudConfig.gistId;
+
+            updateCloudStatusUI();
+        }
+
+        function hasCloudConfig() {
+            return cloudConfig.token && cloudConfig.gistId;
+        }
+
+        // 更新云同步指示器UI样式
+        function updateCloudStatusUI() {
+            const badge = document.getElementById('cloud-header-badge');
+            const panelStatus = document.getElementById('cloud-config-status');
+
+            if (!hasCloudConfig()) {
+                cloudConfig.status = "DISCONNECTED";
+                badge.textContent = "☁️ 离线缓存";
+                badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-slate-400 bg-slate-100 border border-slate-200";
+                panelStatus.textContent = "未启用云端";
+                panelStatus.className = "text-[10px] font-bold text-slate-400";
+                return;
+            }
+
+            switch(cloudConfig.status) {
+                case "CONNECTING":
+                    badge.textContent = "🟡 正在拉取云端...";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-amber-700 bg-amber-50 border border-amber-200";
+                    panelStatus.textContent = "正在同步云端记录...";
+                    panelStatus.className = "text-[10px] font-bold text-amber-600 animate-pulse";
+                    break;
+                case "SYNCING":
+                    badge.textContent = "🟡 正在推送数据...";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-amber-700 bg-amber-50 border border-amber-200";
+                    panelStatus.textContent = "备份推送中...";
+                    panelStatus.className = "text-[10px] font-bold text-amber-600 animate-pulse";
+                    break;
+                case "SUCCESS":
+                    badge.textContent = "🟢 云端已连接";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-emerald-700 bg-emerald-50 border border-emerald-100";
+                    panelStatus.textContent = "GitHub 同步正常";
+                    panelStatus.className = "text-[10px] font-bold text-emerald-600";
+                    break;
+                case "OFFLINE":
+                    badge.textContent = "🔴 离线同步失败";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-rose-700 bg-rose-50 border border-rose-100";
+                    panelStatus.textContent = "网络故障 / Token 无效";
+                    panelStatus.className = "text-[10px] font-bold text-rose-600";
+                    break;
+            }
+        }
+
+        // 双向安全合并算法：根据唯一时间戳ID去重，降序排列
+        function mergeRecords(localArr, remoteArr) {
+            const map = new Map();
+            // 先写入本地记录
+            localArr.forEach(r => map.set(r.id, r));
+            // 写入云端记录进行合并与去重
+            remoteArr.forEach(r => map.set(r.id, r));
+            // 转化为数组并根据时间戳降序排列
+            return Array.from(map.values()).sort((a, b) => b.id - a.id);
+        }
+
+        // 云端双向同步主控 (pull/push)
+        async function syncGist(action) {
+            if (!hasCloudConfig()) return;
+
+            cloudConfig.status = action === 'pull' ? "CONNECTING" : "SYNCING";
+            updateCloudStatusUI();
+
+            try {
+                if (action === 'pull') {
+                    // 1. 从云端拉取
+                    const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, {
+                        headers: { 'Authorization': `Bearer ${cloudConfig.token}` }
+                    });
+                    
+                    if (!response.ok) throw new Error("获取云端数据失败");
+                    
+                    const gist = await response.json();
+                    const file = gist.files["trading_checklist_history.json"];
+                    
+                    if (file && file.content) {
+                        const remoteRecords = JSON.parse(file.content);
+                        // 双向无损合并
+                        records = mergeRecords(records, remoteRecords);
+                        localStorage.setItem('trading_checklist_history', JSON.stringify(records));
+                        renderHistory();
+                    }
+                }
+
+                // 2. 将合并后的最新数据推送到云端 (拉取后立即合流备份，或保存新数据时推送)
+                const pushResponse = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${cloudConfig.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        files: {
+                            "trading_checklist_history.json": {
+                                content: JSON.stringify(records, null, 2)
+                            }
+                        }
+                    })
+                });
+
+                if (!pushResponse.ok) throw new Error("同步至云端失败");
+
+                cloudConfig.status = "SUCCESS";
+            } catch (err) {
+                console.error("云同步异常：", err);
+                cloudConfig.status = "OFFLINE";
+            } finally {
+                updateCloudStatusUI();
+            }
+        }
+
+        // 验证并保存云同步设置
+        async function testAndSaveCloudSettings() {
+            const tokenInput = document.getElementById('cloud-token').value.trim();
+            const gistIdInput = document.getElementById('cloud-gist-id').value.trim();
+
+            if (!tokenInput || !gistIdInput) {
+                alert("❗ 请先填写完整的 GitHub Token 和 Gist ID！");
+                return;
+            }
+
+            // 临时验证
+            cloudConfig.token = tokenInput;
+            cloudConfig.gistId = gistIdInput;
+            cloudConfig.status = "CONNECTING";
+            updateCloudStatusUI();
+
+            try {
+                // 验证链接性并执行初次合并
+                const response = await fetch(`https://api.github.com/gists/${gistIdInput}`, {
+                    headers: { 'Authorization': `Bearer ${tokenInput}` }
+                });
+                
+                if (!response.ok) throw new Error("Token 无效或 Gist ID 错误");
+
+                // 保存持久化
+                localStorage.setItem('checklist_gist_token', tokenInput);
+                localStorage.setItem('checklist_gist_id', gistIdInput);
+
+                // 同步
+                await syncGist('pull');
+                
+                alert("🎉 GitHub 云同步绑定成功！本地记录已与云端记录无损安全合并。");
+                toggleCloudSettings();
+            } catch(e) {
+                alert("❌ 验证失败，请检查 Token 权限（需开启 gist 读写权限）以及 Gist ID 是否正确。");
+                cloudConfig.status = "DISCONNECTED";
+                updateCloudStatusUI();
+            }
+        }
+
+        // 自动创建全新的私有 Gist 文件
+        async function handleAutoCreateGist() {
+            const tokenInput = document.getElementById('cloud-token').value.trim();
+            if (!tokenInput) {
+                alert("❗ 自动创建需要您先在左侧输入您的 GitHub Token。");
+                return;
+            }
+
+            const btn = document.getElementById('btn-auto-create-gist');
+            const originalText = btn.textContent;
+            btn.textContent = "创建中...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('https://api.github.com/gists', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${tokenInput}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: "每日交易执行检查表数据库 (请勿删除此文件)",
+                        public: false, // 设为私有 Gist，保护您的复盘隐私
+                        files: {
+                            "trading_checklist_history.json": {
+                                content: JSON.stringify(records, null, 2) // 直接将本地已有历史作为初始云端数据
+                            }
+                        }
+                    })
+                });
+
+                if (!response.ok) throw new Error("创建 Gist 失败，请检查 Token 权限");
+
+                const gistData = await response.json();
+                document.getElementById('cloud-gist-id').value = gistData.id;
+                
+                alert(`🎉 自动创建私有数据文件成功！\nGist ID：${gistData.id}\n已为您自动填充。请继续点击下方的「验证并保存」按钮。`);
+            } catch(e) {
+                alert("❌ 自动创建失败：请验证您的 Token 是否输入正确并开启了 gist 勾选权限。");
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // ------------------ 📋 历史记录基础维护 ------------------
+
+        // 保存单条记录（双轨制：本地极速落盘，随后静默推送云端）
+        function saveRecord() {
+            const dateVal = document.getElementById('trade-date').value;
+            const dayOfWeekVal = document.getElementById('day-of-week').textContent;
+            const assetVal = document.getElementById('trade-asset').value.trim() || "未定义品种";
+            const sessionVal = document.getElementById('trade-session').value || "未定义时段";
+            const scoreVal = document.getElementById('total-score-display').textContent;
+            const tagVal = document.getElementById('reflection-prompt-tag').textContent;
+            const reflectionVal = document.getElementById('reflection').value.trim() || "无具体记录。";
+
+            if (!dateVal) {
+                alert("❗ 请先选择有效的交易日期！");
+                return;
+            }
+
+            if (tagVal === "--" || tagVal === "待完成细分打分") {
+                alert("❗ 请先在上方完成完整的操作打分，再进行复盘归档。");
+                return;
+            }
+
+            const newRecord = {
+                id: Date.now(),
+                date: dateVal,
+                dayOfWeek: dayOfWeekVal,
+                asset: assetVal.toUpperCase(),
+                session: sessionVal,
+                score: scoreVal,
+                tag: tagVal,
+                reflection: reflectionVal
+            };
+
+            // 1. 立即保存在本地缓存 (确保极速响应)
+            records.unshift(newRecord); 
+            localStorage.setItem('trading_checklist_history', JSON.stringify(records));
+            renderHistory();
+            
+            // 2. 静默推送至 GitHub Gist (若已配置)
+            if (hasCloudConfig()) {
+                syncGist('push');
+            }
+
+            alert("💾 成功！已保存在本地数据库中。若云同步开启，将在后台自动安全同步备份。");
+        }
+
+        // 渲染历史数据至前端表格
+        function renderHistory() {
+            const tbody = document.getElementById('history-table-body');
+            const emptyMsg = document.getElementById('no-history-msg');
+            tbody.innerHTML = '';
+
+            if (records.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                return;
+            } else {
+                emptyMsg.classList.add('hidden');
+            }
+
+            const sessionMap = {
+                "Asia": "亚洲 Asia",
+                "London": "伦敦 London",
+                "NY_AM": "纽约 AM",
+                "NY_PM": "纽约 PM"
+            };
+
+            records.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/70 transition-colors animate-fadeIn";
+
+                let badgeClass = "text-slate-600 bg-slate-100 border border-slate-200";
+                if (r.tag.includes("完美") || r.tag.includes("优秀") || r.tag.includes("卓越") || r.tag.includes("守纪")) {
+                    badgeClass = "text-emerald-700 bg-emerald-50 border border-emerald-100";
+                } else if (r.tag.includes("慌乱") || r.tag.includes("犹豫") || r.tag.includes("松动")) {
+                    badgeClass = "text-amber-700 bg-amber-50 border border-amber-100";
+                } else if (r.tag.includes("失控") || r.tag.includes("违规") || r.tag.includes("错失")) {
+                    badgeClass = "text-rose-700 bg-rose-50 border border-rose-100";
+                }
+
+                const displaySession = sessionMap[r.session] || r.session;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-2">
+                        <div class="font-bold text-slate-800">${r.date}</div>
+                        <div class="text-[10px] text-slate-400 font-medium">${r.dayOfWeek}</div>
+                    </td>
+                    <td class="py-3 px-2 font-bold text-slate-800">${r.asset}</td>
+                    <td class="py-3 px-2 font-semibold text-slate-500">${displaySession}</td>
+                    <td class="py-3 px-2 text-center font-extrabold text-sm ${r.score === '10' ? 'text-emerald-600' : r.score === '0' ? 'text-rose-600' : 'text-slate-700'}">
+                        ${r.score}
+                    </td>
+                    <td class="py-3 px-2">
+                        <span class="inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-lg ${badgeClass}">
+                            ${r.tag}
+                        </span>
+                    </td>
+                    <td class="py-3 px-2 text-center font-medium">
+                        <button onclick="deleteRecord(${r.id})" class="text-slate-400 hover:text-rose-600 transition-colors">
+                            <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 删除单条
+        function deleteRecord(id) {
+            if (confirm("确定要删除这条复盘记录吗？")) {
+                records = records.filter(r => r.id !== id);
+                localStorage.setItem('trading_checklist_history', JSON.stringify(records));
+                renderHistory();
+                
+                // 同步删除至云端
+                if (hasCloudConfig()) {
+                    syncGist('push');
+                }
+            }
+        }
+
+        // 清空本地和云端
+        function clearAllRecords() {
+            if (confirm("⚠️ 警告：这将清空本地所有复盘数据。如果云端已连接，云端数据也将一并清空且不可逆！确定吗？")) {
+                records = [];
+                localStorage.setItem('trading_checklist_history', JSON.stringify(records));
+                renderHistory();
+                
+                if (hasCloudConfig()) {
+                    syncGist('push');
+                }
+            }
+        }
+
+        // 导出至 Excel (CSV格式)
+        function exportToExcel() {
+            if (records.length === 0) {
+                alert("❗ 当前没有任何可导出的记录！");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "日期,星期,交易品种,交易时段,执行得分,交易标签,复盘反思\n";
+
+            records.forEach(r => {
+                const asset = r.asset.replace(/"/g, '""');
+                const tag = r.tag.replace(/"/g, '""');
+                const reflection = r.reflection.replace(/"/g, '""');
+                csvContent += `"${r.date}","${r.dayOfWeek}","${asset}","${r.session}","${r.score}","${tag}","${reflection}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `交易执行复盘历史_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 重置打分表单
+        function resetForm() {
+            if (confirm("确定要清空今天的打分状态吗？")) {
+                state = {
+                    s1: false, s2: false, s3: false,
+                    e1: null, d1: null, d2: null,
+                    q4: false, q5: false
+                };
+
+                // 清除按钮样式
+                document.getElementById('btn-s1').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
+                document.getElementById('btn-s2').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
+                document.getElementById('btn-s3').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
+                
+                document.getElementById('btn-e1-yes').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
+                document.getElementById('btn-e1-no').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
+
+                const d1Btns = document.querySelectorAll('[id^="btn-d1-"]');
+                d1Btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+                const d2Btns = document.querySelectorAll('[id^="btn-d2-"]');
+                d2Btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+
+                document.getElementById('btn-q4').className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]";
+                document.getElementById('btn-q5').className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]";
+
+                document.getElementById('trade-session').value = "";
+                document.getElementById('trade-asset').value = "";
+                document.getElementById('reflection').value = "";
+                document.getElementById('trade-date').valueAsDate = new Date();
+                
+                updateDayOfWeek();
+                runFlow();
+            }
+        }
+    </script>
+</body>
+</html>
