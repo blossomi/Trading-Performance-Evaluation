@@ -836,7 +836,7 @@
 
         // ------------------ 📋 历史记录基础维护 ------------------
 
-        // 保存单条记录（双轨制：本地极速落盘，随后静默推送云端）
+// 💾 保存单条记录（已加入执行纪律和机会质量子项得分）
         function saveRecord() {
             const dateVal = document.getElementById('trade-date').value;
             const dayOfWeekVal = document.getElementById('day-of-week').textContent;
@@ -856,6 +856,38 @@
                 return;
             }
 
+            // 动态计算当前状态下的两个细分子项得分 [1]
+            let disciplineScore = 0;
+            let qualityScore = 0;
+            const hasSignal = (state.s1 && state.s2 && state.s3);
+
+            if (hasSignal) {
+                if (state.e1 === 'yes') {
+                    // 正常入场且有信号：根据实际打分计算 [1]
+                    const d1Val = parseInt(state.d1 || 0);
+                    const d2Val = parseInt(state.d2 || 0);
+                    disciplineScore = d1Val + d2Val;
+
+                    qualityScore = 3; // Q1~Q3基础满分 3 分 [1]
+                    if (state.q4) qualityScore += 0.5;
+                    if (state.q5) qualityScore += 0.5;
+                } else {
+                    // 有信号未入场（错失交易）：判定 0 分 [1]
+                    disciplineScore = 0;
+                    qualityScore = 0;
+                }
+            } else {
+                if (state.e1 === 'yes') {
+                    // 无信号强行交易（违规交易）：判定 0 分 [1]
+                    disciplineScore = 0;
+                    qualityScore = 0;
+                } else {
+                    // 无信号空仓守纪（满分 10 分）：分配纪律 6 分，机会 4 分 [1]
+                    disciplineScore = 6;
+                    qualityScore = 4;
+                }
+            }
+
             const newRecord = {
                 id: Date.now(),
                 date: dateVal,
@@ -864,20 +896,22 @@
                 session: sessionVal,
                 score: scoreVal,
                 tag: tagVal,
-                reflection: reflectionVal
+                reflection: reflectionVal,
+                disciplineScore: disciplineScore, // 增加执行纪律得分字段 [1]
+                qualityScore: qualityScore         // 增加机会质量得分字段 [1]
             };
 
-            // 1. 立即保存在本地缓存 (确保极速响应)
+            // 1. 本地落盘
             records.unshift(newRecord); 
             localStorage.setItem('trading_checklist_history', JSON.stringify(records));
             renderHistory();
             
-            // 2. 静默推送至 GitHub Gist (若已配置)
+            // 2. 自动推送云端
             if (hasCloudConfig()) {
                 syncGist('push');
             }
 
-            alert("💾 成功！已保存在本地数据库中。若云同步开启，将在后台自动安全同步备份。");
+            alert("💾 成功！今日执行及细分得分已安全归档。");
         }
 
         // 渲染历史数据至前端表格
@@ -969,7 +1003,7 @@
             }
         }
 
-        // 导出至 Excel (CSV格式)
+        // 导出表格至 Excel (CSV格式) - 已在总得分前增加两个细分子项列 [1]
         function exportToExcel() {
             if (records.length === 0) {
                 alert("❗ 当前没有任何可导出的记录！");
@@ -978,18 +1012,35 @@
 
             // UTF-8 BOM 确保 Excel 打开中文不乱码
             let csvContent = "\uFEFF"; 
-            // 将原有的“日期,星期”合并为“时间”一列
-            csvContent += "时间,交易品种,交易时段,执行得分,交易标签,复盘反思\n";
+            // 在总得分前添加“执行纪律得分”和“机会质量得分” [1]
+            csvContent += "日期,交易品种,交易时段,执行纪律得分,机会质量得分,总得分,交易标签,复盘反思\n";
 
             records.forEach(r => {
                 const asset = r.asset.replace(/"/g, '""');
                 const tag = r.tag.replace(/"/g, '""');
                 const reflection = r.reflection.replace(/"/g, '""');
+
+                // 兼容老数据：如果历史数据不含有细分字段，则根据总得分进行智能推导 [1]
+                let dScore = r.disciplineScore;
+                let qScore = r.qualityScore;
+                if (dScore === undefined || qScore === undefined) {
+                    if (r.score === "10") {
+                        dScore = 6;
+                        qScore = 4;
+                    } else if (r.score === "0") {
+                        dScore = 0;
+                        qScore = 0;
+                    } else {
+                        dScore = "--"; // 无法推导的中期分数显示为占位符
+                        qScore = "--";
+                    }
+                }
                 
-                csvContent += `"${r.date}","${asset}","${r.session}","${r.score}","${tag}","${reflection}"\n`;
+                // 按顺序拼接字段
+                csvContent += `"${r.date}","${asset}","${r.session}","${dScore}","${qScore}","${r.score}","${tag}","${reflection}"\n`;
             });
 
-            // 获取本地时区的当前日期，用于生成文件名（不含星期）
+            // 获取本地时区当前日期
             const now = new Date();
             const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
@@ -997,7 +1048,6 @@
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            // 文件名格式如：交易执行复盘历史_2026-07-14.csv
             link.setAttribute("download", `交易执行复盘历史_${localDate}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
