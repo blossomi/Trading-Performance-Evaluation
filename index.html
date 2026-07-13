@@ -337,9 +337,28 @@
         // 初始化载入本地存储数据
         let records = JSON.parse(localStorage.getItem('trading_checklist_history')) || [];
 
+
+        // 自动获取纽约当前时区（America/New_York）的 YYYY-MM-DD 日期字符串
+        function getNYDateString() {
+            const d = new Date();
+            // 使用 Intl 原生 API 解析纽约时区，自动处理夏令时 (UTC-4) 和冬令时 (UTC-5)
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/New_York',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).formatToParts(d);
+    
+            const year = parts.find(p => p.type === 'year').value;
+            const month = parts.find(p => p.type === 'month').value;
+            const day = parts.find(p => p.type === 'day').value;
+    
+            return `${year}-${month}-${day}`;
+        }
+
         // 初始化日期以及星期几
         const dateInput = document.getElementById('trade-date');
-        dateInput.valueAsDate = new Date();
+        dateInput.value = getNYDateString(); 
         updateDayOfWeek();
 
         // 绑定日期监听事件
