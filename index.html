@@ -360,7 +360,40 @@
                 </div>
             </div>
 
-            <!-- 云端同步配置折叠面板 (浅色风格) -->
+            <!-- 日历自适应区域 -->
+            <div class="overflow-x-auto w-full rounded-xl border border-slate-100 bg-white p-2">
+                <div class="min-w-[650px] space-y-2">
+                    <!-- 表头：周一至周五 + 汇总 -->
+                    <div class="grid grid-cols-6 gap-2 text-center text-[10px] font-bold tracking-wider text-slate-500 py-2 uppercase bg-slate-50 rounded-lg">
+                        <div>MON 一</div>
+                        <div>TUE 二</div>
+                        <div>WED 三</div>
+                        <div>THU 四</div>
+                        <div>FRI 五</div>
+                        <div class="text-indigo-600">Weekly R 周汇总</div>
+                    </div>
+
+                    <!-- 动态日历主体网格 -->
+                    <div id="calendar-grid" class="grid grid-cols-6 gap-2 text-xs">
+                        <!-- 由 JavaScript 动态渲染 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部按钮控制区 (位于日历下方，偏右对齐) -->
+            <div class="flex justify-end items-center gap-2 pt-2">
+                <button onclick="toggleCloudSettings()" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-sm">
+                    ☁️ 云同步设置
+                </button>
+                <button onclick="exportToExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-md shadow-indigo-600/10">
+                    导出 EXCEL
+                </button>
+                <button onclick="clearAllRecords()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95">
+                    全部清空
+                </button>
+            </div>
+
+                        <!-- 云端同步配置折叠面板 (浅色风格) -->
             <div id="cloud-settings-panel" class="hidden border border-dashed border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xs font-bold text-slate-800">☁️ GitHub Gist 云同步配置</h3>
@@ -398,39 +431,7 @@
                 </div>
             </div>
 
-            <!-- 日历自适应区域 -->
-            <div class="overflow-x-auto w-full rounded-xl border border-slate-100 bg-white p-2">
-                <div class="min-w-[650px] space-y-2">
-                    <!-- 表头：周一至周五 + 汇总 -->
-                    <div class="grid grid-cols-6 gap-2 text-center text-[10px] font-bold tracking-wider text-slate-500 py-2 uppercase bg-slate-50 rounded-lg">
-                        <div>MON 一</div>
-                        <div>TUE 二</div>
-                        <div>WED 三</div>
-                        <div>THU 四</div>
-                        <div>FRI 五</div>
-                        <div class="text-indigo-600">Weekly R 周汇总</div>
-                    </div>
-
-                    <!-- 动态日历主体网格 -->
-                    <div id="calendar-grid" class="grid grid-cols-6 gap-2 text-xs">
-                        <!-- 由 JavaScript 动态渲染 -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- 底部按钮控制区 (位于日历下方，偏右对齐) -->
-            <div class="flex justify-end items-center gap-2 pt-2">
-                <button onclick="toggleCloudSettings()" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-sm">
-                    ☁️ 云同步设置
-                </button>
-                <button onclick="exportToExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-md shadow-indigo-600/10">
-                    导出 EXCEL
-                </button>
-                <button onclick="clearAllRecords()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95">
-                    全部清空
-                </button>
-            </div>
-
+            
             <!-- 新增：单次交易记录明细 (仅展示时间、细分、标签及删除操作) -->
             <div class="mt-6 pt-5 border-t border-slate-100">
                 <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-1.5">
