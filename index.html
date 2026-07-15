@@ -299,6 +299,12 @@
                             <div>实际 R 值: <span id="calc-r-display" class="text-emerald-600 dark:text-emerald-400">--</span></div>
                         </div>
                     </div>
+
+                    <!-- 在 lowest-price / highest-price 那一行的 grid 下方，或者作为独立的一行添加 -->
+                    <div class="mt-4">
+                        <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">阿里云 OSS 图片链接 (可选)</label>
+                        <input type="text" id="trade-image-url" placeholder="例如: https://your-bucket.oss-cn-hangzhou.aliyuncs.com/screenshot.png" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                    </div>
                 </div>
             </details>
 
@@ -466,6 +472,100 @@
 
         </div>
     </div>
+
+
+<!-- 升级版：交易详情与编辑弹窗 -->
+<div id="detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print" onclick="closeTradeDetailModal(event)">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 relative" onclick="event.stopPropagation()">
+        
+        <!-- 头部 -->
+        <div class="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+            <div>
+                <h3 id="modal-date-title" class="text-lg font-bold text-slate-900 dark:text-slate-100">交易细节</h3>
+                <p id="modal-asset-session" class="text-xs text-slate-400 mt-1"></p>
+            </div>
+            <!-- 右上角控制区（翻页、编辑开关、关闭） -->
+            <div class="flex items-center gap-3">
+                <!-- 翻页指示器 -->
+                <div id="modal-pagination" class="hidden flex items-center gap-2 bg-slate-50 dark:bg-slate-950 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                    <button onclick="prevModalRecord()" class="hover:text-indigo-600">◀</button>
+                    <span id="modal-page-indicator">1 / 1</span>
+                    <button onclick="nextModalRecord()" class="hover:text-indigo-600">▶</button>
+                </div>
+                <!-- 编辑开关 -->
+                <button id="btn-modal-edit-toggle" onclick="toggleModalEditMode()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg text-[10px] font-bold">
+                    ✏️ 编辑
+                </button>
+                <!-- 关闭 -->
+                <button onclick="closeTradeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. 视图模式 (仅展示) -->
+        <div id="modal-view-content" class="space-y-4 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl">
+                <div><span class="text-[10px] text-slate-400 uppercase font-bold block">方向</span><span id="modal-direction" class="font-bold">--</span></div>
+                <div><span class="text-[10px] text-slate-400 uppercase font-bold block">实际盈亏</span><span id="modal-pnl" class="font-bold">--</span></div>
+                <div><span class="text-[10px] text-slate-400 uppercase font-bold block">实际 R 值</span><span id="modal-r" class="font-bold">--</span></div>
+                <div><span class="text-[10px] text-slate-400 uppercase font-bold block">执行得分</span><span id="modal-score" class="font-bold">--</span></div>
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-900 dark:text-slate-100 mb-1">▎ 一句话复盘</h4>
+                <p id="modal-reflection" class="bg-slate-50 dark:bg-slate-950/20 p-3 rounded-xl italic leading-relaxed text-slate-700 dark:text-slate-300">--</p>
+            </div>
+            <div id="modal-image-container" class="hidden">
+                <h4 class="font-bold text-slate-900 dark:text-slate-100 mb-2">▎ 盘面截图 (阿里云 OSS)</h4>
+                <div class="border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950/40">
+                    <a id="modal-image-link" href="#" target="_blank">
+                        <img id="modal-image" src="" alt="交易截图" class="w-full h-auto object-cover max-h-[350px]">
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 编辑模式 (点击编辑后显示) -->
+        <div id="modal-edit-content" class="hidden space-y-4 text-xs">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400">交易方向</label>
+                    <select id="edit-modal-dir" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg px-2.5 py-1.5 dark:text-white">
+                        <option value="long">多 (Long)</option>
+                        <option value="short">空 (Short)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400">执行得分 (0 ~ 10)</label>
+                    <input type="number" id="edit-modal-score" step="any" min="0" max="10" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg px-2.5 py-1.5 dark:text-white">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400">实际盈亏 ($)</label>
+                    <input type="number" id="edit-modal-pnl" step="any" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg px-2.5 py-1.5 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400">实际 R 倍数</label>
+                    <input type="number" id="edit-modal-r" step="any" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg px-2.5 py-1.5 dark:text-white">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase font-bold text-slate-400">阿里云图片链接</label>
+                <input type="text" id="edit-modal-image-url" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg px-2.5 py-1.5 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase font-bold text-slate-400">一句话复盘</label>
+                <textarea id="edit-modal-reflection" rows="3" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg p-2 dark:text-white"></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button onclick="saveModalEdit()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg font-bold">保存修改</button>
+                <button onclick="cancelModalEdit()" class="border border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-lg font-bold">取消</button>
+            </div>
+        </div>
+
+    </div>
+</div>
 
     <!-- JavaScript 核心逻辑 -->
     <script>
@@ -1097,6 +1197,7 @@
             const scoreVal = document.getElementById('total-score-display').textContent;
             const tagVal = document.getElementById('reflection-prompt-tag').textContent;
             const reflectionVal = document.getElementById('reflection').value.trim() || "无具体记录。";
+            const imageUrlVal = document.getElementById('trade-image-url').value.trim();
 
             if (!dateVal) {
                 alert("❗ 请先选择有效的交易日期！");
@@ -1183,6 +1284,7 @@
                 exitPrice: exitPriceVal,
                 lowestPrice: lowestPriceVal,
                 highestPrice: highestPriceVal,
+                imageUrl: imageUrlVal,
                 holdingDuration: holdingDur,   // 存储为分钟
                 actualPnL: calculatedPnL,       // 实际金额 
                 actualR: calculatedR            // 实际 R 倍数
@@ -1304,10 +1406,12 @@
                                 </div>
                             </div>
                         `;
-                        cellClass = `border rounded-xl transition-all ${borderBgClass}`;
+                        cellClass = `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] ${borderBgClass}`;
+                        daysHTML += `<div class="${cellClass}" onclick="openTradeDetailModal('${dateStr}')">${contentHTML}</div>`;
                     } else {
                         // 空白未交易单元格
                         cellClass = `border border-slate-100 bg-white min-h-[100px] transition-all hover:bg-slate-50/30 dark:border-slate-800/80 dark:bg-slate-900/20 dark:hover:bg-slate-800/30 ${isCurMonth ? 'text-slate-400' : 'text-slate-300 opacity-20'}`;
+                        daysHTML += `<div class="${cellClass}">${contentHTML}</div>`;
                         contentHTML = `
                             <div class="p-2.5 h-full text-left flex flex-col justify-between">
                                 <span class="text-xs font-bold">${curDate.getDate()}</span>
@@ -1317,7 +1421,6 @@
                         `;
                     }
 
-                    daysHTML += `<div class="${cellClass}">${contentHTML}</div>`;
                     iterDate.setDate(iterDate.getDate() + 1);
                 }
 
@@ -1514,6 +1617,7 @@
 
                 // 清除折叠详细表单参数
                 document.getElementById('entry-time').value = "";
+                document.getElementById('trade-image-url').value = ""; // 图片链接信息
                 document.getElementById('exit-time').value = "";
                 document.getElementById('planned-risk').value = "";
                 document.getElementById('planned-r').value = "";
@@ -1536,6 +1640,173 @@
                 updateCalculatedDetails();
                 runFlow();
             }
+        }
+
+        // ------------------ 弹窗全局状态管理 ------------------
+        let activeDayRecords = []; // 选定日期的所有交易记录
+        let activeRecordIndex = 0; // 当前查看的记录索引
+        let isModalEditMode = false; // 是否处于编辑模式
+
+        // 点击日历打开详情弹窗的主入口
+        function openTradeDetailModal(dateStr) {
+            // 1. 获取该日期所有交易
+            activeDayRecords = records.filter(r => r.date === dateStr);
+            if (activeDayRecords.length === 0) return;
+
+            // 2. 初始化状态
+            activeRecordIndex = 0;
+            isModalEditMode = false;
+
+            // 3. 渲染单笔记录
+            renderModalRecord();
+
+            // 显示遮罩
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        // 统一根据索引渲染弹窗内容 (区分展示/编辑)
+        function renderModalRecord() {
+            if (activeDayRecords.length === 0) return;
+            const r = activeDayRecords[activeRecordIndex];
+
+            // --- A. 基本信息及分页按钮渲染 ---
+            document.getElementById('modal-date-title').textContent = `${r.date} 交易细节`;
+            document.getElementById('modal-asset-session').textContent = `${r.asset} / ${r.session === 'NY_AM' ? '纽约 AM 时段' : r.session === 'NY_PM' ? '纽约 PM 时段' : r.session === 'Asia' ? '亚洲时段' : 'London KillZone'}`;
+
+            const paginationEl = document.getElementById('modal-pagination');
+            if (activeDayRecords.length > 1) {
+                paginationEl.classList.remove('hidden');
+                document.getElementById('modal-page-indicator').textContent = `${activeRecordIndex + 1} / ${activeDayRecords.length}`;
+            } else {
+                paginationEl.classList.add('hidden');
+            }
+
+            const editToggleBtn = document.getElementById('btn-modal-edit-toggle');
+
+            // --- B. 模式面板切换及数据填充 ---
+            if (isModalEditMode) {
+                // 编辑模式开启
+                document.getElementById('modal-view-content').classList.add('hidden');
+                document.getElementById('modal-edit-content').classList.remove('hidden');
+                editToggleBtn.textContent = "👁️ 退出编辑";
+
+                // 填充编辑框数据
+                document.getElementById('edit-modal-dir').value = r.direction || "long";
+                document.getElementById('edit-modal-score').value = r.score || 0;
+                document.getElementById('edit-modal-pnl').value = r.actualPnL !== undefined ? r.actualPnL : "";
+                document.getElementById('edit-modal-r').value = r.actualR !== undefined ? r.actualR : "";
+                document.getElementById('edit-modal-image-url').value = r.imageUrl || "";
+                document.getElementById('edit-modal-reflection').value = r.reflection || "";
+            } else {
+                // 视图展示模式开启
+                document.getElementById('modal-view-content').classList.remove('hidden');
+                document.getElementById('modal-edit-content').classList.add('hidden');
+                editToggleBtn.textContent = "✏️ 编辑";
+
+                // 渲染视图数据
+                const dirEl = document.getElementById('modal-direction');
+                dirEl.textContent = r.direction === 'long' ? '多 (Long)' : r.direction === 'short' ? '空 (Short)' : '未定义';
+                dirEl.className = r.direction === 'long' ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'font-bold text-rose-600 dark:text-rose-400';
+
+                document.getElementById('modal-pnl').textContent = r.actualPnL !== undefined ? `$${r.actualPnL.toFixed(2)}` : '--';
+                document.getElementById('modal-r').textContent = r.actualR !== undefined ? `${r.actualR.toFixed(2)} R` : '--';
+                document.getElementById('modal-score').textContent = `${r.score} 分 (${r.tag})`;
+                document.getElementById('modal-reflection').textContent = r.reflection || '无复盘反思。';
+
+                // OSS 图片检测与渲染
+                const imgContainer = document.getElementById('modal-image-container');
+                const imgEl = document.getElementById('modal-image');
+                const imgLink = document.getElementById('modal-image-link');
+
+                if (r.imageUrl && r.imageUrl.startsWith('http')) {
+                    imgEl.src = r.imageUrl;
+                    imgLink.href = r.imageUrl;
+                    imgContainer.classList.remove('hidden');
+                } else {
+                    imgContainer.classList.add('hidden');
+                    imgEl.src = "";
+                }
+            }
+        }
+
+        // ------------------ 控制翻页和编辑逻辑 ------------------
+        function prevModalRecord() {
+            if (activeRecordIndex > 0) {
+                activeRecordIndex--;
+                isModalEditMode = false; // 翻页时默认恢复展示模式
+                renderModalRecord();
+            }
+        }
+
+        function nextModalRecord() {
+            if (activeRecordIndex < activeDayRecords.length - 1) {
+                activeRecordIndex++;
+                isModalEditMode = false; // 翻页时默认恢复展示模式
+                renderModalRecord();
+            }
+        }
+
+        function toggleModalEditMode() {
+            isModalEditMode = !isModalEditMode;
+            renderModalRecord();
+        }
+
+        function cancelModalEdit() {
+            isModalEditMode = false;
+            renderModalRecord();
+        }
+
+        // 保存修改，同步覆盖主 records 数组
+        function saveModalEdit() {
+            if (activeDayRecords.length === 0) return;
+            const currentRec = activeDayRecords[activeRecordIndex];
+
+            // 1. 查找此交易在主数据源中的位置
+            const mainIndex = records.findIndex(r => r.id === currentRec.id);
+            if (mainIndex === -1) return;
+
+            // 2. 将编辑框内容覆盖写入主数组
+            records[mainIndex].direction = document.getElementById('edit-modal-dir').value;
+            records[mainIndex].score = parseFloat(document.getElementById('edit-modal-score').value) || 0;
+            records[mainIndex].actualPnL = parseFloat(document.getElementById('edit-modal-pnl').value) || 0;
+            records[mainIndex].actualR = parseFloat(document.getElementById('edit-modal-r').value) || 0;
+            records[mainIndex].imageUrl = document.getElementById('edit-modal-image-url').value.trim();
+            records[mainIndex].reflection = document.getElementById('edit-modal-reflection').value.trim();
+
+            // 3. 根据更新后的得分调整标签分类（保留原系统的自动标签特征）
+            const scoreVal = records[mainIndex].score;
+            if (scoreVal === 10) {
+                records[mainIndex].tag = "完美执行 / 卓越交易";
+            } else if (scoreVal === 0) {
+                records[mainIndex].tag = "极度违规 / 纪律失控";
+            } else if (scoreVal >= 7) {
+                records[mainIndex].tag = "入场微犹豫 / 持仓稳健";
+            } else {
+                records[mainIndex].tag = "规则松动 / 双重失守";
+            }
+
+            // 4. 同步更新当前弹窗上下文的副本
+            activeDayRecords[activeRecordIndex] = records[mainIndex];
+
+            // 5. 存储至本地
+            localStorage.setItem('trading_checklist_history', JSON.stringify(records));
+
+            // 6. 重新生成并绘制日历视图
+            renderCalendar();
+
+            // 7. 触发云推送同步
+            if (hasCloudConfig()) {
+                syncGist('push');
+            }
+
+            // 退出编辑并刷新弹窗
+            isModalEditMode = false;
+            renderModalRecord();
+            alert("💾 修改已安全保存！");
+        }
+
+        function closeTradeDetailModal(event) {
+            document.getElementById('detail-modal').classList.add('hidden');
         }
     </script>
 </body>
