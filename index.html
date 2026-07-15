@@ -6,6 +6,11 @@
     <title>每日交易执行检查表与执行历</title>
     <!-- 引入 Tailwind CSS 构建现代化 UI -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <style>
         @media print {
             .no-print {
@@ -29,10 +34,10 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen py-8 px-4 flex flex-col items-center justify-start gap-6">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen py-8 px-4 flex flex-col items-center justify-start gap-6 dark:bg-slate-950 dark:text-slate-200 transition-colors duration-200">
 
 <!-- 主检查表卡片 -->
-    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden card transition-all duration-300">
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden card transition-all duration-300 dark:bg-slate-900 dark:border-slate-800/80">
         
         <!-- 头部：交易基本信息 -->
         <div class="bg-slate-900 text-white p-6 md:p-8">
@@ -41,7 +46,11 @@
                     <h1 class="text-2xl font-bold tracking-tight">每日交易 execution 检查表</h1>
                     <p class="text-slate-400 text-xs mt-1.5">客观评估交易执行，在不确定性中坚守纪律。</p>
                 </div>
-                <div class="no-print flex gap-2">
+                <div class="no-print flex flex-wrap gap-2">
+                    <!-- 主题切换按钮 -->
+                    <button id="theme-toggle" onclick="toggleTheme()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center gap-1.5 border border-slate-700">
+                        <span id="theme-toggle-icon">🌙</span> <span id="theme-toggle-text">暗色模式</span>
+                    </button>
                     <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 shadow-lg shadow-emerald-900/20">
                         导出 PDF / 打印
                     </button>
@@ -79,20 +88,20 @@
             
             <!-- 第一步：有效信号判定 -->
             <section class="space-y-3">
-                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs">01</span>
-                    <h2 class="text-base font-bold text-slate-900">判定今日有效信号 <span class="text-xs text-slate-400 font-normal">（点亮代表情况满足，不选默认为未发生）</span></h2>
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs dark:bg-slate-800 dark:text-slate-300">01</span>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-slate-100">判定今日有效信号 <span class="text-xs text-slate-400 font-normal">（点亮代表情况满足，不选默认为未发生）</span></h2>
                 </div>
                 
                 <!-- 三合一极简单排选项 -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button id="btn-s1" onclick="toggleSignal('s1')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center">
+                    <button id="btn-s1" onclick="toggleSignal('s1')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300">
                         KillZone 时段
                     </button>
-                    <button id="btn-s2" onclick="toggleSignal('s2')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center">
+                    <button id="btn-s2" onclick="toggleSignal('s2')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300">
                         已清扫关键流动性
                     </button>
-                    <button id="btn-s3" onclick="toggleSignal('s3')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center">
+                    <button id="btn-s3" onclick="toggleSignal('s3')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300">
                         快速反应形成 iFvg
                     </button>
                 </div>
@@ -100,18 +109,18 @@
 
             <!-- 第二步：执行情况（始终可见） -->
             <section id="section-step2" class="space-y-4">
-                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs">02</span>
-                    <h2 class="text-base font-bold text-slate-900">今日执行情况记录</h2>
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs dark:bg-slate-800 dark:text-slate-300">02</span>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-slate-100">今日执行情况记录</h2>
                 </div>
                 
                 <div class="space-y-2">
-                    <span class="text-[10px] font-bold text-indigo-600 block uppercase tracking-wider">E1 执行状态</span>
+                    <span class="text-[10px] font-bold text-indigo-600 block uppercase tracking-wider dark:text-indigo-400">E1 执行状态</span>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button id="btn-e1-yes" onclick="selectE1('yes')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-[0.98]">
+                        <button id="btn-e1-yes" onclick="selectE1('yes')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/80">
                             我入场交易了
                         </button>
-                        <button id="btn-e1-no" onclick="selectE1('no')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-[0.98]">
+                        <button id="btn-e1-no" onclick="selectE1('no')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/80">
                             我没有入场（选择空仓观望）
                         </button>
                     </div>
@@ -128,78 +137,78 @@
 
             <!-- 第三步：操作评分表（仅在 有有效信号 且 入场交易 时呈现） -->
             <section id="section-step3" class="hidden space-y-6 fade-enter">
-                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs">03</span>
-                    <h2 class="text-base font-bold text-slate-900">操作精细化评分</h2>
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                    <span class="bg-slate-100 text-slate-800 font-bold px-2.5 py-0.5 rounded-lg text-xs dark:bg-slate-800 dark:text-slate-300">03</span>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-slate-100">操作精细化评分</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- 执行纪律（6分） -->
-                    <div class="border border-slate-100 rounded-2xl p-5 space-y-4 bg-white shadow-sm">
-                        <div class="flex items-center justify-between border-b border-slate-50 pb-2">
-                            <h3 class="font-bold text-slate-900 text-sm">▎ 执行纪律 (Max 6分)</h3>
-                            <span class="text-emerald-600 text-xs font-bold" id="discipline-subtotal">小计: 0 / 6</span>
+                    <div class="border border-slate-100 rounded-2xl p-5 space-y-4 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+                        <div class="flex items-center justify-between border-b border-slate-50 pb-2 dark:border-slate-800/50">
+                            <h3 class="font-bold text-slate-900 text-sm dark:text-slate-100">▎ 执行纪律 (Max 6分)</h3>
+                            <span class="text-emerald-600 text-xs font-bold dark:text-emerald-400" id="discipline-subtotal">小计: 0 / 6</span>
                         </div>
                         
                         <!-- D1 入场 -->
                         <div class="space-y-2">
-                            <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">D1. 入场精确度</span>
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider dark:text-slate-500">D1. 入场精确度</span>
                             <div class="grid grid-cols-1 gap-1.5">
-                                <button id="btn-d1-3" onclick="selectD1('3')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
-                                    及时无误入场 <span class="float-right text-slate-400 text-[10px]">3 分</span>
+                                <button id="btn-d1-3" onclick="selectD1('3')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    及时无误入场 <span class="float-right text-slate-400 text-[10px] dark:text-slate-500">3 分</span>
                                 </button>
-                                <button id="btn-d1-1" onclick="selectD1('1')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
-                                    略有犹豫，延迟 1-2 根 K 线 <span class="float-right text-slate-400 text-[10px]">1 分</span>
+                                <button id="btn-d1-1" onclick="selectD1('1')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    略有犹豫，延迟 1-2 根 K 线 <span class="float-right text-slate-400 text-[10px] dark:text-slate-500">1 分</span>
                                 </button>
-                                <button id="btn-d1-0" onclick="selectD1('0')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
-                                    提前抢跑 或 严重滞后延迟 <span class="float-right text-slate-400 text-[10px]">0 分</span>
+                                <button id="btn-d1-0" onclick="selectD1('0')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    提前抢跑 或 严重滞后延迟 <span class="float-right text-slate-400 text-[10px] dark:text-slate-500">0 分</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- D2 持仓 -->
-                        <div class="space-y-2 pt-2 border-t border-slate-50">
-                            <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">D2. 持仓规范度</span>
+                        <div class="space-y-2 pt-2 border-t border-slate-50 dark:border-slate-800/50">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider dark:text-slate-500">D2. 持仓规范度</span>
                             <div class="grid grid-cols-1 gap-1.5">
-                                <button id="btn-d2-3" onclick="selectD2('3')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
-                                    完美持有，无乱拉保本、无手动提前离场 <span class="float-right text-slate-400 text-[10px]">3 分</span>
+                                <button id="btn-d2-3" onclick="selectD2('3')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    完美持有，无乱拉保本、无手动提前离场 <span class="float-right text-slate-400 text-[10px] dark:text-slate-500">3 分</span>
                                 </button>
-                                <button id="btn-d2-0" onclick="selectD2('0')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
-                                    出现任何形式的主动干预 / 恐慌手动离场 <span class="float-right text-slate-400 text-[10px]">0 分</span>
+                                <button id="btn-d2-0" onclick="selectD2('0')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    出现任何形式的主动干预 / 恐慌手动离场 <span class="float-right text-slate-400 text-[10px] dark:text-slate-500">0 分</span>
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- 机会质量加分（4分） -->
-                    <div class="border border-slate-100 rounded-2xl p-5 space-y-4 bg-white shadow-sm">
-                        <div class="flex items-center justify-between border-b border-slate-50 pb-2">
-                            <h3 class="font-bold text-slate-900 text-sm">▎ 机会质量 (Max 4分)</h3>
-                            <span class="text-emerald-600 text-xs font-bold" id="quality-subtotal">小计: 3 / 4</span>
+                    <div class="border border-slate-100 rounded-2xl p-5 space-y-4 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+                        <div class="flex items-center justify-between border-b border-slate-50 pb-2 dark:border-slate-800/50">
+                            <h3 class="font-bold text-slate-900 text-sm dark:text-slate-100">▎ 机会质量 (Max 4分)</h3>
+                            <span class="text-emerald-600 text-xs font-bold dark:text-emerald-400" id="quality-subtotal">小计: 3 / 4</span>
                         </div>
                         
                         <div class="space-y-2">
                             <!-- 自动同步激活的三个核心信号指标（全部为1分） -->
-                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold">
+                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
                                 <span>Q1. KillZone 时段</span>
                                 <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
                             </div>
-                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold">
+                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
                                 <span>Q2. 清扫关键流动性</span>
                                 <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
                             </div>
-                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold">
+                            <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
                                 <span>Q3. 7 根 K 线内 iFvg</span>
                                 <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
                             </div>
 
                             <!-- Q4, Q5 手动微调项（0.5分） -->
-                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50">
-                                <button id="btn-q4" onclick="toggleQuality('q4')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
-                                    出现 CISD <span class="block text-[10px] text-slate-400 mt-0.5">+0.5 分</span>
+                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50 dark:border-slate-800/50">
+                                <button id="btn-q4" onclick="toggleQuality('q4')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    出现 CISD <span class="block text-[10px] text-slate-400 mt-0.5 dark:text-slate-500">+0.5 分</span>
                                 </button>
-                                <button id="btn-q5" onclick="toggleQuality('q5')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]">
-                                    出现 SMT <span class="block text-[10px] text-slate-400 mt-0.5">+0.5 分</span>
+                                <button id="btn-q5" onclick="toggleQuality('q5')" class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    出现 SMT <span class="block text-[10px] text-slate-400 mt-0.5 dark:text-slate-500">+0.5 分</span>
                                 </button>
                             </div>
                         </div>
@@ -208,23 +217,23 @@
             </section>
 
             <!-- 折叠面板：填写交易详细数据 -->
-            <details id="details-panel" class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-inner transition-all group">
-                <summary class="font-bold text-slate-800 text-sm cursor-pointer hover:text-slate-900 select-none flex items-center justify-between">
+            <details id="details-panel" class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-inner transition-all group dark:bg-slate-900/30 dark:border-slate-800">
+                <summary class="font-bold text-slate-800 text-sm cursor-pointer hover:text-slate-900 select-none flex items-center justify-between dark:text-slate-300 dark:hover:text-slate-200">
                     <span class="flex items-center gap-2">
-                        📊 <span class="text-slate-900">展开填写交易详细数据 (复盘精细化分析)</span>
+                        📊 <span class="text-slate-900 dark:text-slate-100">展开填写交易详细数据 (复盘精细化分析)</span>
                     </span>
-                    <span class="transition-transform group-open:rotate-180 text-xs text-slate-400">▼</span>
+                    <span class="transition-transform group-open:rotate-180 text-xs text-slate-400 dark:text-slate-500">▼</span>
                 </summary>
                 
-                <div class="mt-5 space-y-4 pt-4 border-t border-slate-200/60 text-xs">
+                <div class="mt-5 space-y-4 pt-4 border-t border-slate-200/60 text-xs dark:border-slate-800/60">
                     <!-- 交易方向 -->
                     <div>
-                        <span class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1.5">交易方向</span>
+                        <span class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1.5 dark:text-slate-400">交易方向</span>
                         <div class="grid grid-cols-2 gap-3">
-                            <button type="button" id="btn-dir-long" onclick="selectDirection('long')" class="w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all active:scale-95 text-xs">
+                            <button type="button" id="btn-dir-long" onclick="selectDirection('long')" class="w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all active:scale-95 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                 多 (Long)
                             </button>
-                            <button type="button" id="btn-dir-short" onclick="selectDirection('short')" class="w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all active:scale-95 text-xs">
+                            <button type="button" id="btn-dir-short" onclick="selectDirection('short')" class="w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all active:scale-95 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                 空 (Short)
                             </button>
                         </div>
@@ -233,61 +242,61 @@
                     <!-- 时间区间 -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">入场时间</label>
-                            <input type="time" id="entry-time" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">入场时间</label>
+                            <input type="time" id="entry-time" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">出场时间</label>
-                            <input type="time" id="exit-time" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">出场时间</label>
+                            <input type="time" id="exit-time" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                         </div>
                     </div>
 
                     <!-- 计划设定与手数 -->
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">计划风险 ($)</label>
-                            <input type="number" id="planned-risk" placeholder="100" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">计划风险 ($)</label>
+                            <input type="number" id="planned-risk" placeholder="100" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">计划 R 倍数</label>
-                            <input type="number" id="planned-r" placeholder="3" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">计划 R 倍数</label>
+                            <input type="number" id="planned-r" placeholder="3" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">入场手数 (合约)</label>
-                            <input type="number" id="entry-size" value="1" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">入场手数 (合约)</label>
+                            <input type="number" id="entry-size" value="1" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                         </div>
                     </div>
 
                     <!-- 价格参数及 MAE/MFE 记录 -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold text-emerald-600">入场价格</label>
-                            <input type="number" step="any" id="entry-price" placeholder="例如: 18450" class="w-full mt-1.5 bg-white border border-emerald-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold text-emerald-600 dark:text-emerald-400">入场价格</label>
+                            <input type="number" step="any" id="entry-price" placeholder="例如: 18450" class="w-full mt-1.5 bg-white border border-emerald-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-emerald-900 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold text-rose-600">出场价格</label>
-                            <input type="number" step="any" id="exit-price" placeholder="例如: 18500" class="w-full mt-1.5 bg-white border border-rose-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold text-rose-600 dark:text-rose-400">出场价格</label>
+                            <input type="number" step="any" id="exit-price" placeholder="例如: 18500" class="w-full mt-1.5 bg-white border border-rose-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-rose-900 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">入场后最低价</label>
-                            <input type="number" step="any" id="lowest-price" placeholder="MAE 评估" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">入场后最低价</label>
+                            <input type="number" step="any" id="lowest-price" placeholder="MAE 评估" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">入场后最高价</label>
-                            <input type="number" step="any" id="highest-price" placeholder="MFE 评估" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold dark:text-slate-400">入场后最高价</label>
+                            <input type="number" step="any" id="highest-price" placeholder="MFE 评估" class="w-full mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                         </div>
                     </div>
 
                     <!-- 自动计算面板预览 -->
-                    <div class="bg-slate-100/80 border border-slate-200/50 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-bold text-slate-700">
+                    <div class="bg-slate-100/80 border border-slate-200/50 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-bold text-slate-700 dark:bg-slate-800/80 dark:border-slate-700/50 dark:text-slate-300">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-[10px] uppercase px-1.5 py-0.5 bg-slate-200 rounded text-slate-500">自动计算项</span>
-                            <span class="text-xs text-slate-500">数据将自动打包存至您的数据库。</span>
+                            <span class="text-[10px] uppercase px-1.5 py-0.5 bg-slate-200 rounded text-slate-500 dark:bg-slate-700 dark:text-slate-400">自动计算项</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">数据将自动打包存至您的数据库。</span>
                         </div>
                         <div class="flex flex-wrap items-center gap-4 text-xs">
-                            <div>持仓时间: <span id="calc-dur-display" class="text-indigo-600">--</span></div>
-                            <div>实际盈亏: <span id="calc-pnl-display" class="text-emerald-600">--</span></div>
-                            <div>实际 R 值: <span id="calc-r-display" class="text-emerald-600">--</span></div>
+                            <div>持仓时间: <span id="calc-dur-display" class="text-indigo-600 dark:text-indigo-400">--</span></div>
+                            <div>实际盈亏: <span id="calc-pnl-display" class="text-emerald-600 dark:text-emerald-400">--</span></div>
+                            <div>实际 R 值: <span id="calc-r-display" class="text-emerald-600 dark:text-emerald-400">--</span></div>
                         </div>
                     </div>
                 </div>
@@ -308,17 +317,17 @@
             <!-- 总结反思 (在选择 E1 后动态显示) -->
             <section id="section-reflection" class="hidden space-y-4 fade-enter">
                 <div class="flex items-center justify-between">
-                    <label for="reflection" class="block font-bold text-slate-900 text-sm">一句话复盘</label>
+                    <label for="reflection" class="block font-bold text-slate-900 text-sm dark:text-slate-100">一句话复盘</label>
                     <span id="reflection-prompt-tag" class="text-[10px] font-bold px-2.5 py-0.5 rounded-lg">--</span>
                 </div>
                 
                 <!-- 动态引导思考文本块 -->
-                <div id="reflection-hint-box" class="p-4 bg-slate-50 border border-slate-200/60 rounded-xl text-xs text-slate-600 leading-relaxed space-y-1">
-                    <p class="font-bold text-slate-700 flex items-center gap-1">💡 复盘核心引导：</p>
+                <div id="reflection-hint-box" class="p-4 bg-slate-50 border border-slate-200/60 rounded-xl text-xs text-slate-600 leading-relaxed space-y-1 dark:bg-slate-900/40 dark:border-slate-800/80 dark:text-slate-400">
+                    <p class="font-bold text-slate-700 flex items-center gap-1 dark:text-slate-300">💡 复盘核心引导：</p>
                     <p id="reflection-hint-desc" class="italic">请选择上方执行情况以获取个性化心智引导提示。</p>
                 </div>
 
-                <textarea id="reflection" rows="3" placeholder="写下今天最值得改进的一点：如情绪变化、迟疑细节，或是总结今天的客观执行力..." class="w-full border border-slate-200 rounded-xl p-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-400 transition-all bg-slate-50 focus:bg-white"></textarea>
+                <textarea id="reflection" rows="3" placeholder="写下今天最值得改进的一点：如情绪变化、迟疑细节，或是总结今天的客观执行力..." class="w-full border border-slate-200 rounded-xl p-4 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-400 transition-all bg-slate-50 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:bg-slate-900"></textarea>
                 
                 <!-- 保存复盘按钮 -->
                 <div class="pt-2 flex justify-end no-print">
@@ -331,46 +340,48 @@
     </div>
 
 <!-- 历史复盘记录卡片 (高级浅色系交易执行历 - 扁平重排版) -->
-    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden card transition-all duration-300 no-print">
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden card transition-all duration-300 no-print dark:bg-slate-900 dark:border-slate-800/80">
         <div class="p-6 md:p-8 space-y-5">
             
             <!-- 头部：标题与月份选择器同排并列 -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4 dark:border-slate-800">
                 <div class="flex items-center gap-2">
-                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-1.5 dark:text-slate-100">
                         📋 Trading Calendar
                     </h2>
                     <!-- 云端状态指示标签 -->
-                    <span id="cloud-header-badge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-md text-slate-500 bg-slate-100 border border-slate-200 transition-all">
+                    <span id="cloud-header-badge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-md text-slate-500 bg-slate-100 border border-slate-200 transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
                         ☁️ 离线缓存
                     </span>
                 </div>
                 
                 <!-- 月份与年份导航栏 -->
-                <div class="flex items-center gap-3 bg-slate-50 border border-slate-100 p-1.5 rounded-xl self-end sm:self-auto">
-                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-xs font-bold flex items-center justify-center transition-all active:scale-90 shadow-sm">
+                <div class="flex items-center gap-3 bg-slate-50 border border-slate-100 p-1.5 rounded-xl self-end sm:self-auto dark:bg-slate-950 dark:border-slate-800">
+                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-xs font-bold flex items-center justify-center transition-all active:scale-90 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">
                         ◀
                     </button>
-                    <span id="calendar-month-year" class="text-xs font-extrabold text-slate-800 tracking-wider min-w-[90px] text-center uppercase">
+                    <span id="calendar-month-year" class="text-xs font-extrabold text-slate-800 tracking-wider min-w-[90px] text-center uppercase dark:text-slate-200">
                         2026年 7月
                     </span>
-                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-xs font-bold flex items-center justify-center transition-all active:scale-90 shadow-sm">
+                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 text-xs font-bold flex items-center justify-center transition-all active:scale-90 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">
                         ▶
                     </button>
                 </div>
             </div>
 
+
+
             <!-- 日历自适应区域 -->
-            <div class="overflow-x-auto w-full rounded-xl border border-slate-100 bg-white p-2">
+            <div class="overflow-x-auto w-full rounded-xl border border-slate-100 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
                 <div class="min-w-[650px] space-y-2">
                     <!-- 表头：周一至周五 + 汇总 -->
-                    <div class="grid grid-cols-6 gap-2 text-center text-[10px] font-bold tracking-wider text-slate-500 py-2 uppercase bg-slate-50 rounded-lg">
-                        <div>MON 一</div>
-                        <div>TUE 二</div>
-                        <div>WED 三</div>
-                        <div>THU 四</div>
-                        <div>FRI 五</div>
-                        <div class="text-indigo-600">Weekly R 周汇总</div>
+                    <div class="grid grid-cols-6 gap-2 text-center text-[10px] font-bold tracking-wider text-slate-500 py-2 uppercase bg-slate-50 rounded-lg dark:bg-slate-950 dark:text-slate-400">
+                        <div>MON</div>
+                        <div>TUE</div>
+                        <div>WED</div>
+                        <div>THU</div>
+                        <div>FRI</div>
+                        <div class="text-indigo-600 dark:text-indigo-400">Weekly R 周汇总</div>
                     </div>
 
                     <!-- 动态日历主体网格 -->
@@ -382,72 +393,71 @@
 
             <!-- 底部按钮控制区 (位于日历下方，偏右对齐) -->
             <div class="flex justify-end items-center gap-2 pt-2">
-                <button onclick="toggleCloudSettings()" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-sm">
+                <button onclick="toggleCloudSettings()" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-sm dark:bg-slate-800 dark:border-slate-750 dark:text-slate-300 dark:hover:bg-slate-700">
                     ☁️ 云同步设置
                 </button>
                 <button onclick="exportToExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-md shadow-indigo-600/10">
                     导出 EXCEL
                 </button>
-                <button onclick="clearAllRecords()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95">
+                <button onclick="clearAllRecords()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 dark:bg-rose-950/20 dark:border-rose-900 dark:text-rose-400">
                     全部清空
                 </button>
             </div>
 
                         <!-- 云端同步配置折叠面板 (浅色风格) -->
-            <div id="cloud-settings-panel" class="hidden border border-dashed border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
+            <div id="cloud-settings-panel" class="hidden border border-dashed border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3 dark:border-slate-800 dark:bg-slate-900/40">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs font-bold text-slate-800">☁️ GitHub Gist 云同步配置</h3>
+                    <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">☁️ GitHub Gist 云同步配置</h3>
                     <span id="cloud-config-status" class="text-[10px] font-bold text-slate-400">未配置</span>
                 </div>
-                <p class="text-[10px] text-slate-400 leading-normal">
+                <p class="text-[10px] text-slate-400 leading-normal dark:text-slate-500">
                     Token 仅保存在您本地，浏览器直连 GitHub 安全沙箱。
-                    <a href="https://github.com/settings/tokens" target="_blank" class="text-indigo-600 hover:underline font-semibold ml-1">去申请 Token</a> (勾选 gist 权限)。
+                    <a href="https://github.com/settings/tokens" target="_blank" class="text-indigo-600 hover:underline font-semibold ml-1 dark:text-indigo-400">去申请 Token</a> (勾选 gist 权限)。
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] uppercase font-bold text-slate-500">GitHub Personal Token</label>
-                        <input type="password" id="cloud-token" placeholder="ghp_xxxxxxxxxxxx" class="w-full mt-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">GitHub Personal Token</label>
+                        <input type="password" id="cloud-token" placeholder="ghp_xxxxxxxxxxxx" class="w-full mt-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                     </div>
                     <div>
-                        <label class="block text-[10px] uppercase font-bold text-slate-500">Gist ID (云端数据文件标示)</label>
+                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Gist ID (云端数据文件标示)</label>
                         <div class="flex gap-1.5 mt-1">
-                            <input type="text" id="cloud-gist-id" placeholder="填写已有 ID" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <input type="text" id="cloud-gist-id" placeholder="填写已有 ID" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                             <button id="btn-auto-create-gist" onclick="handleAutoCreateGist()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 rounded-lg text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all">
                                 自动创建
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center justify-between pt-2 border-t border-slate-200">
-                    <span id="cloud-status-indicator" class="text-[10px] font-medium text-slate-400">双向自动合并算法将安全合并多台设备的数据</span>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <span id="cloud-status-indicator" class="text-[10px] font-medium text-slate-400 dark:text-slate-500">双向自动合并算法将安全合并多台设备的数据</span>
                     <div class="flex gap-2">
                         <button onclick="testAndSaveCloudSettings()" class="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all">
                             验证并保存
                         </button>
-                        <button onclick="toggleCloudSettings()" class="border border-slate-200 bg-white text-slate-700 px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all">
+                        <button onclick="toggleCloudSettings()" class="border border-slate-200 bg-white text-slate-700 px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                             取消
                         </button>
                     </div>
                 </div>
             </div>
 
-            
             <!-- 新增：单次交易记录明细 (仅展示时间、细分、标签及删除操作) -->
-            <div class="mt-6 pt-5 border-t border-slate-100">
-                <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-1.5">
+            <div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+                <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-1.5 dark:text-slate-200">
                     📋 单次交易记录明细
                 </h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                            <tr class="border-b border-slate-100 text-slate-400 font-bold dark:border-slate-800 dark:text-slate-500">
                                 <th class="py-2.5 px-2">时间 / 日期</th>
                                 <th class="py-2.5 px-2">细分分数 (纪律 / 质量)</th>
                                 <th class="py-2.5 px-2">执行标签</th>
                                 <th class="py-2.5 px-2 text-center">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="trade-log-body" class="divide-y divide-slate-50 font-medium text-slate-700">
+                        <tbody id="trade-log-body" class="divide-y divide-slate-50 font-medium text-slate-700 dark:divide-slate-800 dark:text-slate-300">
                             <!-- 由 JS 动态渲染 -->
                         </tbody>
                     </table>
@@ -492,6 +502,7 @@
         dateInput.addEventListener('change', updateDayOfWeek);
 
         window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
             loadCloudConfig();
             renderCalendar();
             initCalculatedListeners();
@@ -499,6 +510,40 @@
                 syncGist('pull');
             }
         });
+
+        // ------------------ 🌓 明暗主题切换逻辑 ------------------
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                updateThemeUI(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                updateThemeUI(true);
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+                updateThemeUI(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeUI(false);
+            }
+        }
+
+        function updateThemeUI(isDark) {
+            const icon = document.getElementById('theme-toggle-icon');
+            const text = document.getElementById('theme-toggle-text');
+            if (icon && text) {
+                icon.textContent = isDark ? "☀️" : "🌙";
+                text.textContent = isDark ? "亮色模式" : "暗色模式";
+            }
+        }
 
         // 计算并显示星期几
         function updateDayOfWeek() {
@@ -534,7 +579,7 @@
             if (state[key]) {
                 btn.className = "p-4 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center shadow-md shadow-emerald-600/15";
             } else {
-                btn.className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
+                btn.className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300";
             }
             
             runFlow();
@@ -544,14 +589,14 @@
         function selectE1(val) {
             state.e1 = val;
             
-            document.getElementById('btn-e1-yes').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
-            document.getElementById('btn-e1-no').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
+            document.getElementById('btn-e1-yes').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/80";
+            document.getElementById('btn-e1-no').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/80";
 
             const btn = document.getElementById(`btn-e1-${val}`);
             if (val === 'yes') {
                 btn.className = "w-full text-left p-3.5 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-emerald-600/10";
             } else {
-                btn.className = "w-full text-left p-3.5 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-slate-800/10";
+                btn.className = "w-full text-left p-3.5 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-slate-800/10 dark:border-slate-700 dark:bg-slate-700";
             }
 
             runFlow();
@@ -561,13 +606,13 @@
         function selectD1(val) {
             state.d1 = val;
             const btns = document.querySelectorAll('[id^="btn-d1-"]');
-            btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+            btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300");
             
             const activeBtn = document.getElementById(`btn-d1-${val}`);
             if (val === '3' || val === '1') {
                 activeBtn.className = "w-full text-left p-3 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all";
             } else {
-                activeBtn.className = "w-full text-left p-3 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all";
+                activeBtn.className = "w-full text-left p-3 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all dark:border-slate-700 dark:bg-slate-700";
             }
             runFlow(); 
         }
@@ -576,13 +621,13 @@
         function selectD2(val) {
             state.d2 = val;
             const btns = document.querySelectorAll('[id^="btn-d2-"]');
-            btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+            btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300");
             
             const activeBtn = document.getElementById(`btn-d2-${val}`);
             if (val === '3') {
                 activeBtn.className = "w-full text-left p-3 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all";
             } else {
-                activeBtn.className = "w-full text-left p-3 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all";
+                activeBtn.className = "w-full text-left p-3 rounded-xl border-slate-800 bg-slate-800 text-white text-xs font-bold transition-all dark:border-slate-700 dark:bg-slate-700";
             }
             runFlow(); 
         }
@@ -594,12 +639,12 @@
             if (state[id]) {
                 btn.className = "w-full text-left p-3 rounded-xl border-emerald-600 bg-emerald-600 text-white text-xs font-bold transition-all";
             } else {
-                btn.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all";
+                btn.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
             }
             runFlow(); 
         }
 
-        // 选择交易方向 (新增)
+        // 选择交易方向
         function selectDirection(dir) {
             state.direction = dir;
             const btnLong = document.getElementById('btn-dir-long');
@@ -607,9 +652,9 @@
             
             if (dir === 'long') {
                 btnLong.className = "w-full text-center py-2.5 rounded-xl bg-emerald-600 text-white font-bold transition-all text-xs shadow-md shadow-emerald-600/10";
-                btnShort.className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs hover:bg-slate-50";
+                btnShort.className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
             } else {
-                btnLong.className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs hover:bg-slate-50";
+                btnLong.className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700";
                 btnShort.className = "w-full text-center py-2.5 rounded-xl bg-rose-600 text-white font-bold transition-all text-xs shadow-md shadow-rose-600/10";
             }
             updateCalculatedDetails();
@@ -643,37 +688,37 @@
 
                     if (state.d1 === null || state.d2 === null) {
                         hintDescEl.textContent = "今日出现有效信号且你已按计划入场。请在上方第三步完成「入场精确度 (D1)」和「持仓规范度 (D2)」的细分选择，系统将为你动态解锁深度行为反思引导。";
-                        hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-slate-600 bg-slate-100 border border-slate-200";
+                        hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-slate-600 bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300";
                         hintTagEl.textContent = "待完成细分打分";
                     } else {
                         if (state.d1 === '3' && state.d2 === '3') {
                             hintDescEl.textContent = "完美的知行合一！今日不仅信号完备，你的入场时机与持仓定力也无可挑剔。请保持这种宁静、纯粹的执行力。记录下此时稳定的心理状态，这便是你走向稳定盈利的基石！";
-                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-emerald-700 bg-emerald-50 border border-emerald-100";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-emerald-700 bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-300";
                             hintTagEl.textContent = "完美执行 / 卓越交易";
                         } 
                         else if (state.d1 === '3' && state.d2 === '0') {
                             hintDescEl.textContent = "你的入场时机非常精准，但持仓中途出现了恐慌性的违规干预（如乱移保本、手动提早离场）。请深度反思：是什么引发了你在中途的焦虑？是过度盯盘放大了情绪，还是对预设止损缺乏信念？如何训练自己“离屏静候”？";
-                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300";
                             hintTagEl.textContent = "入场精准 / 持仓慌乱";
                         } 
                         else if (state.d1 === '1' && state.d2 === '3') {
                             hintDescEl.textContent = "你的持仓规范度极佳，但入场时由于迟疑延迟了 1-2 根K线。当时为什么产生了犹豫？是害怕这笔交易会亏损，还是在等待根本不存在的“百分百确认”？如何建立看到触发信号即刻无脑扣动扳机的心理肌肉记忆？";
-                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300";
                             hintTagEl.textContent = "入场微犹豫 / 持仓稳健";
                         } 
                         else if (state.d1 === '1' && state.d2 === '0') {
                             hintDescEl.textContent = "整笔交易虽然基于正确信号，但执行过程两端松动——入场迟疑拖拉，持仓心慌乱动。这说明你的心态正处于极度紧绷和游离状态。复盘重点：今天的仓位是不是过重了？是不是背负了不该背负的近期亏损压力？请降低仓位找回舒适感。";
-                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300";
                             hintTagEl.textContent = "规则松动 / 双重失守";
                         } 
                         else if (state.d1 === '0' && state.d2 === '3') {
                             hintDescEl.textContent = "虽然你后面完美坚持了持仓，但入场犯了严重错误（抢跑或严重延迟）。如果是抢跑，是否是因为害怕踏空的 FOMO 心理作祟？如果是延迟，是注意力不集中，还是明知规则不符仍带有赌博性试探？无序的入场极易在震荡市中被快速消灭。";
-                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-amber-700 bg-amber-50 border border-amber-100 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300";
                             hintTagEl.textContent = "入场违规 / 持仓优秀";
                         } 
                         else if (state.d1 === '0' && state.d2 === '0') {
                             hintDescEl.textContent = "虽然市场给出了完美信号，但你用极糟糕的方式完成了它：抢跑或严重落后，并在中途极度恐慌乱加干预。这是一场彻底被贪婪和恐惧彻底绑架的交易。请立刻停下来！今天让你如此失控的核心诱因是什么？生活压力、仓位失控，还是账户连续亏损？";
-                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                            hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300";
                             hintTagEl.textContent = "极度违规 / 纪律失控";
                         }
                     }
@@ -683,7 +728,7 @@
                     updateScoreDisplay(0);
 
                     hintDescEl.textContent = "核心交易信号全部齐备，但你却没有入场。请深度反思：当时是什么阻止了你？是因为害怕亏损、对上一笔亏损的阴影、过度迟疑，还是对规则产生了不必要的怀疑？下一次面临相同的标准信号，应如何果断执行？";
-                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300";
                     hintTagEl.textContent = "错失交易";
                 }
             } else {
@@ -697,14 +742,14 @@
                     } else {
                         hintDescEl.textContent = "今日完全没有出现任何系统信号，你却盲目入场了。为什么？是否因为无聊想操作、频繁交易，或者完全被盘面的波动带偏了节奏？是什么让你无法耐下心来等待属于你的确定性？";
                     }
-                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100";
+                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-rose-700 bg-rose-50 border border-rose-100 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300";
                     hintTagEl.textContent = "违规强进";
                 } else {
                     updateBanner("success", "系统判定：今日无信号，严格执行空仓守纪！", "执行得分判定为 10 分（无信号不交易是最高阶的纪律）。");
                     updateScoreDisplay(10);
 
                     hintDescEl.textContent = "极佳的空仓定力！无信号时不随意出手，是迈向稳定盈利最核心、也最难的一步。复盘重点：今天在没有信号的时间里，内心是否有过动摇和瘙痒？你是如何成功克制并安抚内心的交易欲望、平静耐心地观盘或关掉电脑的？";
-                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-indigo-700 bg-indigo-50 border border-indigo-100";
+                    hintTagEl.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-lg text-indigo-700 bg-indigo-50 border border-indigo-100 dark:bg-indigo-950/30 dark:border-indigo-900 dark:text-indigo-300";
                     hintTagEl.textContent = "空仓守纪";
                 }
             }
@@ -720,11 +765,11 @@
             document.getElementById('feedback-banner-desc').textContent = desc;
 
             if (type === "success") {
-                box.className = "rounded-xl p-4 border border-emerald-500 bg-emerald-50/20 text-emerald-950 text-xs sm:text-sm font-semibold flex flex-col gap-1";
+                box.className = "rounded-xl p-4 border border-emerald-500 bg-emerald-50/20 text-emerald-950 text-xs sm:text-sm font-semibold flex flex-col gap-1 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300";
             } else if (type === "error") {
-                box.className = "rounded-xl p-4 border border-rose-200 bg-rose-50 text-rose-950 text-xs sm:text-sm font-semibold flex flex-col gap-1";
+                box.className = "rounded-xl p-4 border border-rose-200 bg-rose-50 text-rose-950 text-xs sm:text-sm font-semibold flex flex-col gap-1 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-300";
             } else {
-                box.className = "rounded-xl p-4 border border-slate-700 bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold flex flex-col gap-1";
+                box.className = "rounded-xl p-4 border border-slate-700 bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold flex flex-col gap-1 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300";
             }
         }
 
@@ -752,7 +797,7 @@
             } else if (score === 0) {
                 scoreEl.className = "text-4xl font-extrabold text-rose-500 transition-all duration-300";
             } else {
-                scoreEl.className = "text-4xl font-extrabold text-slate-200 transition-all duration-300";
+                scoreEl.className = "text-4xl font-extrabold text-slate-200 transition-all duration-300 dark:text-slate-100";
             }
         }
 
@@ -861,7 +906,7 @@
             return cloudConfig.token && cloudConfig.gistId;
         }
 
-// 更新云同步指示器 UI 样式 (浅色系优化版)
+        // 更新云同步指示器 UI 样式 (浅色系优化版)
         function updateCloudStatusUI() {
             const badge = document.getElementById('cloud-header-badge');
             const panelStatus = document.getElementById('cloud-config-status');
@@ -869,36 +914,36 @@
             if (!hasCloudConfig()) {
                 cloudConfig.status = "DISCONNECTED";
                 badge.textContent = "☁️ 离线缓存";
-                badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-slate-500 bg-slate-100 border border-slate-200";
+                badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-slate-500 bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400";
                 panelStatus.textContent = "未启用云端";
-                panelStatus.className = "text-[10px] font-bold text-slate-400";
+                panelStatus.className = "text-[10px] font-bold text-slate-400 dark:text-slate-500";
                 return;
             }
 
             switch(cloudConfig.status) {
                 case "CONNECTING":
                     badge.textContent = "🟡 正在拉取云端...";
-                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-amber-700 bg-amber-50 border border-amber-200";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300";
                     panelStatus.textContent = "正在同步云端记录...";
                     panelStatus.className = "text-[10px] font-bold text-amber-600 animate-pulse";
                     break;
                 case "SYNCING":
                     badge.textContent = "🟡 正在推送数据...";
-                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-amber-700 bg-amber-50 border border-amber-200";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300";
                     panelStatus.textContent = "备份推送中...";
                     panelStatus.className = "text-[10px] font-bold text-amber-600 animate-pulse";
                     break;
                 case "SUCCESS":
                     badge.textContent = "🟢 云端已连接";
-                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-emerald-700 bg-emerald-50 border border-emerald-100";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-emerald-700 bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-300";
                     panelStatus.textContent = "GitHub 同步正常";
-                    panelStatus.className = "text-[10px] font-bold text-emerald-600";
+                    panelStatus.className = "text-[10px] font-bold text-emerald-600 dark:text-emerald-400";
                     break;
                 case "OFFLINE":
                     badge.textContent = "🔴 离线同步失败";
-                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-rose-700 bg-rose-50 border border-rose-100";
+                    badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-md text-rose-700 bg-rose-50 border border-rose-100 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300";
                     panelStatus.textContent = "网络故障 / Token 无效";
-                    panelStatus.className = "text-[10px] font-bold text-rose-600";
+                    panelStatus.className = "text-[10px] font-bold text-rose-600 dark:text-rose-400";
                     break;
             }
         }
@@ -1041,7 +1086,7 @@
             }
         }
 
-        // ------------------ 📋 历史记录维护与日历渲染 ------------------
+        // ------------------ 📐 历史记录维护与日历渲染 ------------------
 
         // 保存单条记录
         function saveRecord() {
@@ -1090,7 +1135,7 @@
                 }
             }
 
-            // 获取折叠表单中的详细参数 [1]
+            // 获取折叠表单中的详细参数
             const dirVal = state.direction;
             const entryTimeVal = document.getElementById('entry-time').value;
             const exitTimeVal = document.getElementById('exit-time').value;
@@ -1102,7 +1147,7 @@
             const lowestPriceVal = parseFloat(document.getElementById('lowest-price').value) || 0;
             const highestPriceVal = parseFloat(document.getElementById('highest-price').value) || 0;
 
-            // 自动测算并生成数据 [1]
+            // 自动测算并生成数据
             let calculatedPnL = 0;
             let calculatedR = 0;
             if (entryPriceVal > 0 && exitPriceVal > 0 && dirVal) {
@@ -1127,7 +1172,7 @@
                 disciplineScore: disciplineScore,
                 qualityScore: qualityScore,
                 
-                // 新增明细字段归档 [1]
+                // 新增明细字段归档
                 direction: dirVal,
                 entryTime: entryTimeVal,
                 exitTime: exitTimeVal,
@@ -1229,44 +1274,44 @@
                         let borderBgClass = "";
                         if (avgScore < 4) {
                             // 当日操作得分低于 4 分，强制整框高亮变红（使用 2px 加粗红框、高饱和度背景及红色外阴影）
-                            borderBgClass = "border-2 border-rose-400 bg-rose-100 text-rose-950 hover:bg-rose-200/80 shadow-md shadow-rose-200/50 scale-[0.98]";
+                            borderBgClass = "border-2 border-rose-400 bg-rose-100 text-rose-950 hover:bg-rose-200/80 shadow-md shadow-rose-200/50 scale-[0.98] dark:border-rose-600/80 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50";
                         } else if (avgScore >= 4) {
                             // 雅致淡绿主题
-                            borderBgClass = "border border-emerald-200 bg-emerald-50/35 text-emerald-800 hover:bg-emerald-50/70 shadow-sm shadow-emerald-100/10";
+                            borderBgClass = "border border-emerald-200 bg-emerald-50/35 text-emerald-800 hover:bg-emerald-50/70 shadow-sm shadow-emerald-100/10 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300 dark:hover:bg-emerald-950/30";
                         } else {
                             // 雅致淡灰/白主题
-                            borderBgClass = "border border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100/70";
+                            borderBgClass = "border border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100/70 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:bg-slate-850";
                         }
                         
                         contentHTML = `
                             <div class="flex flex-col h-full justify-between p-2.5 min-h-[100px] text-left transition-all ${isCurMonth ? '' : 'opacity-40'}">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-slate-900">${curDate.getDate()}</span>
-                                    <span class="text-[9px] px-1.5 py-0.5 bg-orange-300 rounded border border-slate-600 text-slate-900 font-bold tracking-tight">
+                                    <span class="text-xs font-bold text-slate-900 dark:text-slate-200">${curDate.getDate()}</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 bg-orange-300 rounded border border-slate-600 text-slate-900 font-bold tracking-tight dark:bg-orange-950/50 dark:border-orange-900 dark:text-orange-300">
                                         得分: ${avgScore.toFixed(1)}
                                     </span>
                                 </div>
                                 <div class="my-2 text-center">
-                                    <div class="text-sm font-black tracking-tight leading-none ${dayPnL >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                                    <div class="text-sm font-black tracking-tight leading-none ${dayPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
                                         ${dayPnL >= 0 ? '+$' : '-$'}${Math.abs(dayPnL).toFixed(2)}
                                     </div>
-                                    <div class="text-[10px] font-bold text-slate-500 mt-1">
+                                    <div class="text-[10px] font-bold text-slate-500 mt-1 dark:text-slate-400">
                                         ${dayR >= 0 ? '+' : ''}${dayR.toFixed(2)} R
                                     </div>
                                 </div>
-                                <div class="flex justify-center items-center text-[9px] font-bold text-slate-400">
-                                    <span class="text-slate-500 tracking-wider">${scorePercent}%</span>
+                                <div class="flex justify-center items-center text-[9px] font-bold text-slate-400 dark:text-slate-500">
+                                    <span class="text-slate-500 tracking-wider dark:text-slate-400">${scorePercent}%</span>
                                 </div>
                             </div>
                         `;
                         cellClass = `border rounded-xl transition-all ${borderBgClass}`;
                     } else {
                         // 空白未交易单元格
-                        cellClass = `border border-slate-100 bg-white min-h-[100px] transition-all hover:bg-slate-50/30 ${isCurMonth ? 'text-slate-400' : 'text-slate-300 opacity-20'}`;
+                        cellClass = `border border-slate-100 bg-white min-h-[100px] transition-all hover:bg-slate-50/30 dark:border-slate-800/80 dark:bg-slate-900/20 dark:hover:bg-slate-800/30 ${isCurMonth ? 'text-slate-400' : 'text-slate-300 opacity-20'}`;
                         contentHTML = `
                             <div class="p-2.5 h-full text-left flex flex-col justify-between">
                                 <span class="text-xs font-bold">${curDate.getDate()}</span>
-                                <div class="text-center text-[10px] italic text-slate-300 font-medium select-none">未交易</div>
+                                <div class="text-center text-[10px] italic text-slate-300 font-medium select-none dark:text-slate-600">未交易</div>
                                 <span></span>
                             </div>
                         `;
@@ -1284,19 +1329,19 @@
                 }
 
                 // 周汇总列 (第6列汇总，匹配白色高级设计)
-                let weekSumClass = "border border-slate-100 bg-slate-50/40 rounded-xl p-2.5 min-h-[100px] flex flex-col justify-between text-center";
+                let weekSumClass = "border border-slate-100 bg-slate-50/40 rounded-xl p-2.5 min-h-[100px] flex flex-col justify-between text-center dark:border-slate-800 dark:bg-slate-900/40";
                 if (weekRSum > 0) {
-                    weekSumClass = "border border-indigo-100 bg-indigo-50/20 text-indigo-800 rounded-xl p-2.5 min-h-[100px] flex flex-col justify-between text-center shadow-sm shadow-indigo-100/10";
+                    weekSumClass = "border border-indigo-100 bg-indigo-50/20 text-indigo-800 rounded-xl p-2.5 min-h-[100px] flex flex-col justify-between text-center shadow-sm shadow-indigo-100/10 dark:border-indigo-900/60 dark:bg-indigo-950/20 dark:text-indigo-300";
                 } else if (weekRSum < 0) {
-                    weekSumClass = "border border-amber-200 bg-amber-50/20 text-amber-800 rounded-xl p-2.5 min-h-[100px] flex flex-col justify-between text-center shadow-sm shadow-amber-100/10";
+                    weekSumClass = "border border-amber-200 bg-amber-50/20 text-amber-800 rounded-xl p-2.5 min-h-[100px] flex flex-col justify-between text-center shadow-sm shadow-amber-100/10 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300";
                 }
 
                 const weekSumHTML = `
                     <div class="${weekSumClass}">
-                        <span class="text-[9px] font-extrabold tracking-widest text-slate-400 uppercase">周汇总</span>
+                        <span class="text-[9px] font-extrabold tracking-widest text-slate-400 uppercase dark:text-slate-500">周汇总</span>
                         <div class="my-auto">
-                            <span class="text-[9px] text-slate-400 block font-bold mb-0.5">本周汇总</span>
-                            <span class="text-xs font-black tracking-tight ${weekRSum > 0 ? 'text-indigo-600' : weekRSum < 0 ? 'text-amber-600' : 'text-slate-400'}">
+                            <span class="text-[9px] text-slate-400 block font-bold mb-0.5 dark:text-slate-500">本周汇总</span>
+                            <span class="text-xs font-black tracking-tight ${weekRSum > 0 ? 'text-indigo-600 dark:text-indigo-400' : weekRSum < 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-550'}">
                                 ${weekRSum >= 0 ? '+' : ''}${weekRSum.toFixed(2)} R
                             </span>
                         </div>
@@ -1324,7 +1369,7 @@
             }
         }
 
-        // 渲染单次交易记录明细列表 [1]
+        // 渲染单次交易记录明细列表
         function renderTradeLog() {
             const tbody = document.getElementById('trade-log-body');
             if (!tbody) return;
@@ -1332,25 +1377,25 @@
 
             records.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/70 transition-colors";
+                tr.className = "hover:bg-slate-50/70 transition-colors dark:hover:bg-slate-800/50";
 
-                let badgeClass = "text-slate-600 bg-slate-100 border border-slate-200";
+                let badgeClass = "text-slate-600 bg-slate-100 border border-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:border-slate-700";
                 if (r.tag.includes("完美") || r.tag.includes("优秀") || r.tag.includes("卓越") || r.tag.includes("守纪")) {
-                    badgeClass = "text-emerald-700 bg-emerald-50 border border-emerald-100";
+                    badgeClass = "text-emerald-700 bg-emerald-50 border border-emerald-100 dark:text-emerald-300 dark:bg-emerald-950/30 dark:border-emerald-900";
                 } else if (r.tag.includes("慌乱") || r.tag.includes("犹豫") || r.tag.includes("松动")) {
-                    badgeClass = "text-amber-700 bg-amber-50 border border-amber-100";
+                    badgeClass = "text-amber-700 bg-amber-50 border border-amber-100 dark:text-amber-300 dark:bg-amber-950/30 dark:border-amber-900";
                 } else if (r.tag.includes("失控") || r.tag.includes("违规") || r.tag.includes("错失")) {
-                    badgeClass = "text-rose-700 bg-rose-50 border border-rose-100";
+                    badgeClass = "text-rose-700 bg-rose-50 border border-rose-100 dark:text-rose-300 dark:bg-rose-950/30 dark:border-rose-900";
                 }
 
                 // 拼接入场时间与日期
                 const timeStr = r.entryTime ? `${r.date} ${r.entryTime}` : r.date;
 
                 tr.innerHTML = `
-                    <td class="py-2.5 px-2 text-slate-800 font-bold">${timeStr}</td>
-                    <td class="py-2.5 px-2 text-slate-500 font-semibold">
-                        纪律: <span class="text-slate-800 font-bold">${r.disciplineScore !== undefined ? r.disciplineScore : '--'}分</span> / 
-                        质量: <span class="text-slate-800 font-bold">${r.qualityScore !== undefined ? r.qualityScore : '--'}分</span>
+                    <td class="py-2.5 px-2 text-slate-800 font-bold dark:text-slate-200">${timeStr}</td>
+                    <td class="py-2.5 px-2 text-slate-500 font-semibold dark:text-slate-400">
+                        纪律: <span class="text-slate-800 font-bold dark:text-slate-200">${r.disciplineScore !== undefined ? r.disciplineScore : '--'}分</span> / 
+                        质量: <span class="text-slate-800 font-bold dark:text-slate-200">${r.qualityScore !== undefined ? r.qualityScore : '--'}分</span>
                     </td>
                     <td class="py-2.5 px-2">
                         <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${badgeClass}">
@@ -1358,7 +1403,7 @@
                         </span>
                     </td>
                     <td class="py-2.5 px-2 text-center">
-                        <button onclick="deleteRecord(${r.id})" class="text-slate-400 hover:text-rose-600 transition-colors">
+                        <button onclick="deleteRecord(${r.id})" class="text-slate-400 hover:text-rose-600 transition-colors dark:hover:text-rose-400">
                             <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -1370,20 +1415,20 @@
         }
 
 
-        // 删除单条交易记录（支持原地数据刷新）
+        // 删除单条交易记录
         function deleteRecord(id) {
             if (confirm("确定要删除这条交易记录吗？")) {
                 // 1. 寻找目标记录在全局数组中的索引
                 const index = records.findIndex(r => r.id === id);
                 
                 if (index !== -1) {
-                    // 2. 原地删除该元素，不改变 records 变量的引用地址，避免由于 const 声明导致的报错 [1]
+                    // 2. 原地删除该元素，不改变 records 变量的引用地址，避免由于 const 声明导致的报错
                     records.splice(index, 1);
                     
                     // 3. 同步写入本地缓存
                     localStorage.setItem('trading_checklist_history', JSON.stringify(records));
                     
-                    // 4. 强制重新渲染交易日历（重新运行日历内的数据归组与求和逻辑）
+                    // 4. 强制重新渲染交易日历
                     renderCalendar();
                     
                     // 5. 如果开启了云同步，则推送至云端
@@ -1452,20 +1497,20 @@
                 };
 
                 // 清除基本按钮样式
-                document.getElementById('btn-s1').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
-                document.getElementById('btn-s2').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
-                document.getElementById('btn-s3').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center";
+                document.getElementById('btn-s1').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300";
+                document.getElementById('btn-s2').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300";
+                document.getElementById('btn-s3').className = "p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300";
                 
-                document.getElementById('btn-e1-yes').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
-                document.getElementById('btn-e1-no').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98]";
+                document.getElementById('btn-e1-yes').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/80";
+                document.getElementById('btn-e1-no').className = "w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/80";
 
                 const d1Btns = document.querySelectorAll('[id^="btn-d1-"]');
-                d1Btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+                d1Btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300");
                 const d2Btns = document.querySelectorAll('[id^="btn-d2-"]');
-                d2Btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all");
+                d2Btns.forEach(b => b.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300");
 
-                document.getElementById('btn-q4').className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]";
-                document.getElementById('btn-q5').className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98]";
+                document.getElementById('btn-q4').className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
+                document.getElementById('btn-q5').className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold transition-all active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
 
                 // 清除折叠详细表单参数
                 document.getElementById('entry-time').value = "";
@@ -1477,8 +1522,8 @@
                 document.getElementById('exit-price').value = "";
                 document.getElementById('lowest-price').value = "";
                 document.getElementById('highest-price').value = "";
-                document.getElementById('btn-dir-long').className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs";
-                document.getElementById('btn-dir-short').className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs";
+                document.getElementById('btn-dir-long').className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
+                document.getElementById('btn-dir-short').className = "w-full text-center py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold transition-all text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
 
                 document.getElementById('trade-session').value = "NY_AM";
                 document.getElementById('trade-asset').value = "MNQ";
