@@ -43,7 +43,7 @@
         <div class="bg-slate-900 text-white p-6 md:p-8">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight">iFvg系统执行评估</h1>
+                    <h1 class="text-2xl font-bold tracking-tight">每日交易 execution 检查表</h1>
                     <p class="text-slate-400 text-xs mt-1.5">客观评估交易执行，在不确定性中坚守纪律。</p>
                 </div>
                 <div class="no-print flex flex-wrap gap-2">
@@ -52,7 +52,7 @@
                         <span id="theme-toggle-icon">🌙</span> <span id="theme-toggle-text">暗色模式</span>
                     </button>
                     <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 shadow-lg shadow-emerald-900/20">
-                        导出PDF
+                        导出 PDF / 打印
                     </button>
                     <button onclick="resetForm()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95">
                         重置表单
@@ -96,7 +96,7 @@
                 <!-- 三合一极简单排选项 -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button id="btn-s1" onclick="toggleSignal('s1')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300">
-                        KillZone 时段
+                        Clear DOL
                     </button>
                     <button id="btn-s2" onclick="toggleSignal('s2')" class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs md:text-sm font-bold transition-all active:scale-[0.98] text-center min-h-[56px] flex items-center justify-center dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-300">
                         已清扫关键流动性
@@ -190,7 +190,7 @@
                         <div class="space-y-2">
                             <!-- 自动同步激活的三个核心信号指标（全部为1分） -->
                             <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
-                                <span>Q1. KillZone 时段</span>
+                                <span>Q1. Clear DOL</span>
                                 <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
                             </div>
                             <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
@@ -198,7 +198,7 @@
                                 <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
                             </div>
                             <div class="flex items-center justify-between p-3 rounded-xl border border-emerald-500 bg-emerald-50/30 text-emerald-950 text-xs font-bold dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
-                                <span>Q3. 7 根 K 线内 iFvg</span>
+                                <span>Q3. 7根K线内 iFvg</span>
                                 <span class="bg-emerald-600 text-white px-2.5 py-0.5 rounded-lg text-[10px]">自动激活 (+1.0)</span>
                             </div>
 
@@ -777,13 +777,18 @@
             showElement('section-reflection');
             showElement('section-score');
 
+            if (state.e1 === 'yes') {
+                showElement('section-step3');
+            } else {
+                hideElement('section-step3');
+            }
+
             const hintDescEl = document.getElementById('reflection-hint-desc');
             const hintTagEl = document.getElementById('reflection-prompt-tag');
 
             if (hasSignal) {
                 if (state.e1 === 'yes') {
                     updateBanner("ok", "系统判定：今日出现有效信号，且已按计划入场交易。", "请在第三步完成精细化评分及详细数据登记。");
-                    showElement('section-step3');
                     calculateScore();
 
                     if (state.d1 === null || state.d2 === null) {
@@ -824,7 +829,6 @@
                     }
                 } else {
                     updateBanner("error", "系统判定：今日出现有效信号，但未入场错失交易。", "执行得分判定为 0 分（犹豫 / 恐惧心理作祟）。");
-                    hideElement('section-step3');
                     updateScoreDisplay(0);
 
                     hintDescEl.textContent = "核心交易信号全部齐备，但你却没有入场。请深度反思：当时是什么阻止了你？是因为害怕亏损、对上一笔亏损的阴影、过度迟疑，还是对规则产生了不必要的怀疑？下一次面临相同的标准信号，应如何果断执行？";
@@ -832,7 +836,6 @@
                     hintTagEl.textContent = "错失交易";
                 }
             } else {
-                hideElement('section-step3');
                 if (state.e1 === 'yes') {
                     updateBanner("error", "系统判定：无有效信号违规强行入场！", "执行得分判定为 0 分（破坏无信号不交易核心纪律）。");
                     updateScoreDisplay(0);
