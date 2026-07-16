@@ -410,7 +410,7 @@
                 </button>
             </div>
 
-                        <!-- 云端同步配置折叠面板 (浅色风格) -->
+            <!-- 云端同步配置折叠面板 (浅色风格) -->
             <div id="cloud-settings-panel" class="hidden border border-dashed border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3 dark:border-slate-800 dark:bg-slate-900/40">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">☁️ GitHub Gist 云同步配置</h3>
@@ -450,17 +450,28 @@
 
             <!-- 新增：单次交易记录明细 (仅展示时间、细分、标签及删除操作) -->
             <div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
-                <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-1.5 dark:text-slate-200">
-                    📋 单次交易记录明细
-                </h3>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                    <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1.5 dark:text-slate-200">
+                        📋 单次交易记录明细
+                    </h3>
+                    <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
+                        <label class="font-semibold">每页</label>
+                        <select id="trade-log-page-size" onchange="changeTradeLogPageSize(this.value)" class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                        </select>
+                        <span class="font-semibold">项</span>
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="border-b border-slate-100 text-slate-400 font-bold dark:border-slate-800 dark:text-slate-500">
-                                <th class="py-2.5 px-2">时间 / 日期</th>
-                                <th class="py-2.5 px-2">细分分数 (纪律 / 质量)</th>
-                                <th class="py-2.5 px-2">执行标签</th>
-                                <th class="py-2.5 px-2 text-center">操作</th>
+                                <th class="py-2.5 px-2">Time</th>
+                                <th class="py-2.5 px-2">Score</th>
+                                <th class="py-2.5 px-2">Tag</th>
+                                <th class="py-2.5 px-2 text-center">Operation</th>
                             </tr>
                         </thead>
                         <tbody id="trade-log-body" class="divide-y divide-slate-50 font-medium text-slate-700 dark:divide-slate-800 dark:text-slate-300">
@@ -468,6 +479,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="trade-log-pagination" class="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-slate-400"></div>
             </div>
 
         </div>
@@ -1493,22 +1505,40 @@
             }
         }
 
+        let tradeLogPage = 1;
+        let tradeLogPageSize = 10;
+
+        function changeTradeLogPageSize(size) {
+            tradeLogPageSize = Number(size) || 10;
+            tradeLogPage = 1;
+            renderTradeLog();
+        }
+
+        function changeTradeLogPage(delta) {
+            const totalPages = Math.max(1, Math.ceil(records.length / tradeLogPageSize));
+            tradeLogPage = Math.min(totalPages, Math.max(1, tradeLogPage + delta));
+            renderTradeLog();
+        }
+
         // 渲染单次交易记录明细列表
         function renderTradeLog() {
             const tbody = document.getElementById('trade-log-body');
+            const paginationEl = document.getElementById('trade-log-pagination');
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            // 1. 复制一份 records（避免修改原数组），并按照时间字符串进行倒序排序
             const sortedRecords = [...records].sort((a, b) => {
                 const timeA = `${a.date} ${a.entryTime || '00:00'}`;
                 const timeB = `${b.date} ${b.entryTime || '00:00'}`;
-                // 字符串比较，若格式一致（如 YYYY-MM-DD HH:mm）可直接通过 localeCompare 排序
-                return timeB.localeCompare(timeA); 
+                return timeB.localeCompare(timeA);
             });
 
-            // 2. 遍历排序后的数组
-            sortedRecords.forEach(r => {
+            const totalPages = Math.max(1, Math.ceil(sortedRecords.length / tradeLogPageSize));
+            tradeLogPage = Math.min(tradeLogPage, totalPages);
+            const startIndex = (tradeLogPage - 1) * tradeLogPageSize;
+            const pageRecords = sortedRecords.slice(startIndex, startIndex + tradeLogPageSize);
+
+            pageRecords.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/70 transition-colors dark:hover:bg-slate-800/50";
 
@@ -1521,14 +1551,21 @@
                     badgeClass = "text-rose-700 bg-rose-50 border border-rose-100 dark:text-rose-300 dark:bg-rose-950/30 dark:border-rose-900";
                 }
 
-                // 拼接入场时间与日期
-                const timeStr = r.entryTime ? `${r.date} ${r.entryTime}` : r.date;
+                const dayOfWeekMap = ['日', '一', '二', '三', '四', '五', '六'];
+                const dayOfWeek = r.date ? dayOfWeekMap[new Date(`${r.date}T00:00:00`).getDay()] : '--';
+                const timeStr = r.entryTime ? `周${dayOfWeek} ${r.date} ${r.entryTime}` : `周${dayOfWeek} ${r.date}`;
+                const disciplineScore = r.disciplineScore !== undefined ? r.disciplineScore : '--';
+                const qualityScore = r.qualityScore !== undefined ? r.qualityScore : '--';
+                const totalScore = r.score !== undefined ? r.score : (disciplineScore !== '--' && qualityScore !== '--' ? Number(disciplineScore) + Number(qualityScore) : '--');
 
                 tr.innerHTML = `
-                    <td class="py-2.5 px-2 text-slate-800 font-bold dark:text-slate-200">${timeStr}</td>
-                    <td class="py-2.5 px-2 text-slate-500 font-semibold dark:text-slate-400">
-                        纪律: <span class="text-slate-800 font-bold dark:text-slate-200">${r.disciplineScore !== undefined ? r.disciplineScore : '--'}分</span> / 
-                        质量: <span class="text-slate-800 font-bold dark:text-slate-200">${r.qualityScore !== undefined ? r.qualityScore : '--'}分</span>
+                    <td class="py-2.5 px-2 text-slate-800 font-bold dark:text-slate-200 whitespace-nowrap">${timeStr}</td>
+                    <td class="py-2.5 px-2 text-slate-500 font-semibold dark:text-slate-400 leading-relaxed">
+                        <span class="inline-flex items-center gap-1.5 flex-wrap">纪律: <span class="text-slate-800 font-bold dark:text-slate-200">${disciplineScore}分</span></span>
+                        <span class="mx-1.5">/</span>
+                        <span class="inline-flex items-center gap-1.5 flex-wrap">质量: <span class="text-slate-800 font-bold dark:text-slate-200">${qualityScore}分</span></span>
+                        <span class="mx-1.5">/</span>
+                        <span class="inline-flex items-center gap-1.5 flex-wrap text-[10px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400">总分: <span class="font-black">${totalScore}</span></span>
                     </td>
                     <td class="py-2.5 px-2">
                         <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${badgeClass}">
@@ -1545,6 +1582,20 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            if (paginationEl) {
+                const startItem = sortedRecords.length === 0 ? 0 : startIndex + 1;
+                const endItem = Math.min(startIndex + tradeLogPageSize, sortedRecords.length);
+                paginationEl.innerHTML = `
+                    <div>共 ${sortedRecords.length} 条记录</div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeTradeLogPage(-1)" class="px-2 py-1 rounded border border-slate-200 bg-white text-slate-600 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300" ${tradeLogPage <= 1 ? 'disabled' : ''}>上一页</button>
+                        <span>第 ${tradeLogPage}/${totalPages} 页</span>
+                        <button onclick="changeTradeLogPage(1)" class="px-2 py-1 rounded border border-slate-200 bg-white text-slate-600 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300" ${tradeLogPage >= totalPages ? 'disabled' : ''}>下一页</button>
+                    </div>
+                    <div>显示 ${startItem}-${endItem}</div>
+                `;
+            }
         }
 
 
@@ -1803,16 +1854,10 @@
             records[mainIndex].imageUrl = document.getElementById('edit-modal-image-url').value.trim();
             records[mainIndex].reflection = document.getElementById('edit-modal-reflection').value.trim();
 
-            // 3. 根据更新后的得分调整标签分类（保留原系统的自动标签特征）
-            const scoreVal = records[mainIndex].score;
-            if (scoreVal === 10) {
-                records[mainIndex].tag = "完美执行 / 卓越交易";
-            } else if (scoreVal === 0) {
-                records[mainIndex].tag = "极度违规 / 纪律失控";
-            } else if (scoreVal >= 7) {
-                records[mainIndex].tag = "入场微犹豫 / 持仓稳健";
-            } else {
-                records[mainIndex].tag = "规则松动 / 双重失守";
+            // 3. 保留原始标签，不再因为编辑分数或备注而重写标签
+            const existingTag = records[mainIndex].tag;
+            if (!existingTag) {
+                records[mainIndex].tag = "待归档";
             }
 
             // 4. 同步更新当前弹窗上下文的副本
