@@ -1498,17 +1498,17 @@
             renderTradeLog();
         }
         // 清空本地和云端记录
-        function clearAllRecords() {
-            if (confirm("⚠️ 警告：这将清空本地所有复盘数据。如果云端已连接，云端数据也将一并清空且不可逆！确定吗？")) {
-                records = [];
-                localStorage.setItem('trading_checklist_history', JSON.stringify(records));
-                renderCalendar();
+        // function clearAllRecords() {
+        //     if (confirm("⚠️ 警告：这将清空本地所有复盘数据。如果云端已连接，云端数据也将一并清空且不可逆！确定吗？")) {
+        //         records = [];
+        //         localStorage.setItem('trading_checklist_history', JSON.stringify(records));
+        //         renderCalendar();
                 
-                if (hasCloudConfig()) {
-                    syncGist('push');
-                }
-            }
-        }
+        //         if (hasCloudConfig()) {
+        //             syncGist('push');
+        //         }
+        //     }
+        // }
 
         let tradeLogPage = 1;
         let tradeLogPageSize = 10;
