@@ -1735,10 +1735,26 @@
         let activeRecordIndex = 0; // 当前查看的记录索引
         let isModalEditMode = false; // 是否处于编辑模式
 
+        function sortActiveDayRecords(recordsToSort) {
+            return [...recordsToSort].sort((a, b) => {
+                const timeA = (a.entryTime || a.exitTime || '').trim();
+                const timeB = (b.entryTime || b.exitTime || '').trim();
+                if (!timeA && !timeB) return 0;
+                if (!timeA) return 1;
+                if (!timeB) return -1;
+
+                const toMin = t => {
+                    const m = t.match(/^(\d{1,2}):(\d{2})/);
+                    return m ? Number(m[1]) * 60 + Number(m[2]) : Infinity;
+                };
+                return toMin(timeA) - toMin(timeB);
+            });
+        }
+
         // 点击日历打开详情弹窗的主入口
         function openTradeDetailModal(dateStr) {
             // 1. 获取该日期所有交易
-            activeDayRecords = records.filter(r => r.date === dateStr);
+            activeDayRecords = sortActiveDayRecords(records.filter(r => r.date === dateStr));
             if (activeDayRecords.length === 0) return;
 
             // 2. 初始化状态
