@@ -26,19 +26,19 @@
 
             /* 隐藏所有带有 .no-print 类的交互元素（如按钮、操作栏） */
             .no-print {
-                display: none !important;
+                display: none;
             }
 
             /* 强制页面背景为白色，文字为黑色，节省墨水并提高可读性 */
             body {
-                background-color: white !important;
-                color: black !important;
+                background-color: white;
+                color: black;
             }
 
             /* 移除卡片阴影，添加细边框，并防止卡片在分页时被截断 */
             .card {
-                box-shadow: none !important;
-                border: 1px solid #e2e8f0 !important;
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
                 page-break-inside: avoid;
             }
 
@@ -74,8 +74,8 @@
          * 当输入框未通过校验时，添加红色边框和发光效果以提示用户
          * ========================================= */
         .input-error {
-            border-color: #f43f5e !important;
-            box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.2) !important;
+            border-color: #f43f5e;
+            box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.2);
         }
     </style>
 </head>
@@ -595,13 +595,12 @@
                     <button type="button" id="btn-modal-edit-toggle" data-action="toggle-modal-edit"
                         class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg text-[10px] font-bold">✏️
                         编辑</button>
-                    <button type="button" data-action="close-modal"
-                        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+
+
+                    <button type="button" data-action="close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Close modal"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg>
                     </button>
+
                 </div>
             </div>
 
