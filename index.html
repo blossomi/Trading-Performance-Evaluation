@@ -12,6 +12,12 @@
         tailwind.config = { darkMode: 'class' }
     </script>
     <style>
+        /* 新增：将日期输入框的原生日历图标反转为白色，以适配深色背景 */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
         /* =========================================
          * 打印媒体查询 (@media print)
          * 作用：优化导出 PDF 或物理打印时的页面表现
@@ -111,7 +117,7 @@
                         class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">交易日期</label>
                     <input type="date" id="trade-date"
                         class="w-full mt-1.5 bg-slate-800/50 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <span id="day-of-week" class="text-[10px] text-emerald-400 font-semibold mt-1 block"></span>
+                    <span id="day-of-week" class="text-[13px] text-emerald-400 font-semibold mt-1 block"></span>
                 </div>
                 <div>
                     <label for="trade-asset"
