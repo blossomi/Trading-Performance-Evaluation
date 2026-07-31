@@ -1085,9 +1085,9 @@
                                 // 单元格头部：左大字号日期，中笔数，右得分
                                 cell = createEl('div', { className: `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] p-2 min-h-[90px] flex flex-col justify-between ${borderBg} ${isCur ? '' : 'opacity-40'}`, dataAction: 'open-modal', dataValue: str }, [
                                     createEl('div', { className: 'flex justify-between items-center w-full' }, [
-                                        createEl('span', { className: 'text-sm font-black text-slate-800 dark:text-slate-100' }, [cur.getDate()]),
+                                        createEl('span', { className: 'text-sm font-black text-slate-800 dark:text-slate-100' },[String(cur.getDate())]),
                                         createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-slate-200/80 dark:bg-slate-700/80 rounded text-slate-700 dark:text-slate-300 font-bold' }, [`${recs.length}笔`]),
-                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-orange-300 rounded text-slate-900 font-bold' }, [`均分: ${dayAvg.toFixed(1)}`])
+                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-orange-300 rounded text-slate-900 font-bold' }, [`${dayAvg.toFixed(1)}`])
                                     ]),
                                     centerNode
                                 ]);
@@ -1095,7 +1095,7 @@
                                 // 无交易记录的日期单元格：「未交易」正中间居中
                                 cell = createEl('div', { className: `border border-slate-100 bg-white min-h-[90px] p-2 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900/20 ${isCur ? 'text-slate-400' : 'opacity-20'}` }, [
                                     createEl('div', { className: 'flex justify-between items-center w-full' }, [
-                                        createEl('span', { className: 'text-sm font-bold text-slate-700 dark:text-slate-300' }, [cur.getDate()]),
+                                        createEl('span', { className: 'text-sm font-bold text-slate-700 dark:text-slate-300' }, [String(cur.getDate())]),
                                         createEl('span', { className: 'text-[9px] text-slate-400 font-semibold' }, [`周${CONSTANTS.WEEKDAYS[cur.getDay()]}`])
                                     ]),
                                     createEl('div', { className: 'my-auto text-center flex items-center justify-center' }, [
