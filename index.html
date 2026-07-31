@@ -731,6 +731,7 @@
             // 决定基础分、UI 提示文案、反思引导语和标签样式
             // Key 格式: `${hasFull}_${e1}_${d1}_${d2}`
             // ==========================================
+
             const SCORING_MATRIX = {
                 'true_yes_3_3': { baseScore: 6, banner: 'ok', title: '系统判定：完整信号且按计划入场。', desc: '请完成精细化数据登记。', hint: '完美的知行合一！今日信号完备，入场与持仓无可挑剔。保持这种纯粹的执行力！', tag: '完美执行 / 卓越交易', tagClass: 'emerald' },
                 'true_yes_3_0': { baseScore: 3, banner: 'ok', title: '系统判定：入场精准，持仓违规。', desc: '中途出现恐慌干预。', hint: '入场精准但持仓慌乱。反思：是什么引发了中途的焦虑？是过度盯盘还是对止损缺乏信念？', tag: '入场精准 / 持仓慌乱', tagClass: 'amber' },
@@ -741,7 +742,8 @@
                 'true_yes_null_null': { baseScore: 0, banner: 'ok', title: '系统判定：已入场，待完成细分打分。', desc: '请完成 D1 和 D2 选择。', hint: '已按计划入场。请在上方完成「入场精确度」和「持仓规范度」选择，解锁深度反思引导。', tag: '待完成细分打分', tagClass: 'slate' },
                 'true_no_null_null': { baseScore: 0, banner: 'error', title: '系统判定：有效信号未入场，错失交易。', desc: '得分 0（犹豫/恐惧）。', hint: '信号齐备却未入场。反思：是什么阻止了你？害怕亏损、上一笔阴影还是过度迟疑？', tag: '错失交易', tagClass: 'rose' },
                 'false_yes_null_null': { baseScore: 0, banner: 'error', title: '系统判定：无完整信号违规强行入场！', desc: '得分 0（破坏纪律）。', hint: '无信号冲入市场。反思：是否陷入 FOMO、报复性心态，或被盘面波动带偏？', tag: '违规强进', tagClass: 'rose' },
-                'false_no_null_null': { baseScore: 10, banner: 'success', title: '系统判定：无完整信号，严格空仓守纪！', desc: '得分 10（最高阶纪律）。', hint: '极佳的空仓定力！无信号不出手是稳定盈利的核心。反思：无信号时内心是否有过动摇？', tag: '空仓守纪', tagClass: 'indigo' }
+                // 更改点：baseScore 从 10 改为 6
+                'false_no_null_null': { baseScore: 6, banner: 'success', title: '系统判定：无完整信号，严格空仓守纪！', desc: '得分 6（守纪分）。', hint: '极佳的空仓定力！无信号不出手是稳定盈利的核心。反思：无信号时内心是否有过动摇？', tag: '空仓守纪', tagClass: 'indigo' }
             };
 
             // ==========================================
@@ -982,6 +984,7 @@
                     this.calculateScore(cfg);
                 },
 
+
                 // 计算并更新各项得分
                 calculateScore(cfg) {
                     const s = StateManager.state;
@@ -1007,7 +1010,7 @@
 
                     // 计算最终总分
                     let finalScore = '--';
-                    if (cfg.baseScore === 10) finalScore = 10; // 空仓守纪满分
+                    if (cfg.baseScore === 6 && cfg.tag === '空仓守纪') finalScore = 6; // 空仓守纪只给 6 分守纪分
                     else if (cfg.baseScore === 0 && cfg.tag !== '待完成细分打分') finalScore = 0; // 严重违规 0 分
                     else if (cfg.tag === '待完成细分打分') finalScore = '--'; // 等待用户打分
                     else finalScore = d1 + d2 + qSub; // 正常计算
@@ -1033,7 +1036,7 @@
 
                     // 渲染 6 周，每周 5 个交易日 + 1 个周汇总
                     for (let w = 0; w < 6; w++) {
-                        let weekR = 0, weekDailyAvgSum = 0, weekValidDays = 0, weekTradeCount = 0, hasCurMonth = false;
+                        let weekPnL = 0, weekR = 0, weekDailyAvgSum = 0, weekValidDays = 0, weekTradeCount = 0, hasCurMonth = false;
                         for (let d = 0; d < 5; d++) {
                             const cur = new Date(iter);
                             const str = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
@@ -1060,9 +1063,9 @@
                                 // 计算当日平均分
                                 const dayAvg = dayValidCount > 0 ? dayScoreSum / dayValidCount : 0;
 
+                                weekPnL += pnl;
                                 weekR += r;
-                                weekTradeCount += recs.length; // 累加周交易笔数
-                                // 核心逻辑：只有当天有有效打分时，才将该日均分计入周统计，并增加有效天数
+                                weekTradeCount += recs.length;
                                 if (dayValidCount > 0) {
                                     weekDailyAvgSum += dayAvg;
                                     weekValidDays++;
@@ -1070,26 +1073,34 @@
 
                                 const isBad = dayAvg < 4; // 当日平均分低于 4 分标记为表现不佳
                                 const borderBg = isBad ? "border-2 border-rose-400 bg-rose-100 text-rose-950 dark:border-rose-600/80 dark:bg-rose-950/30 dark:text-rose-300" : "border border-emerald-200 bg-emerald-50/35 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300";
-                                const pnlNode = hasTrade ? createEl('div', { className: 'my-1 text-center' }, [
+
+                                // 中间内容：有实际交易显示盈亏/R倍数，空仓/错失则居中展示文字
+                                const centerNode = hasTrade ? createEl('div', { className: 'my-auto text-center flex flex-col justify-center items-center' }, [
                                     createEl('div', { className: `text-sm font-black ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}` }, [`${pnl >= 0 ? '+$' : '-$'}${Math.abs(pnl).toFixed(2)}`]),
                                     createEl('div', { className: 'text-[10px] font-bold text-slate-500' }, [`${r >= 0 ? '+' : ''}${r.toFixed(2)} R`])
-                                ]) : createEl('div', { className: `my-1 text-center text-xs ${hasMissed ? 'text-rose-600 font-bold' : 'text-slate-400 italic'}` }, [hasMissed ? '错失交易' : '空仓守纪']);
+                                ]) : createEl('div', { className: 'my-auto text-center flex items-center justify-center' }, [
+                                    createEl('span', { className: `text-xs ${hasMissed ? 'text-rose-600 font-bold' : 'text-slate-500 font-bold italic'}` }, [hasMissed ? '错失交易' : '空仓守纪'])
+                                ]);
 
-                                cell = createEl('div', { className: `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] p-2 min-h-[100px] flex flex-col justify-between ${borderBg} ${isCur ? '' : 'opacity-40'}`, dataAction: 'open-modal', dataValue: str }, [
-                                    createEl('div', { className: 'flex justify-between items-center' }, [
-                                        createEl('span', { className: 'text-xs font-bold' }, [cur.getDate()]),
-                                        createEl('div', { className: 'flex items-center gap-1' }, [
-                                            createEl('span', { className: 'text-[9px] px-1 py-0.5 bg-slate-200/80 dark:bg-slate-700/80 rounded text-slate-700 dark:text-slate-300 font-bold' }, [`${recs.length}笔`]),
-                                            createEl('span', { className: 'text-[9px] px-1 py-0.5 bg-orange-300 rounded text-slate-900 font-bold' }, [`均分: ${dayAvg.toFixed(1)}`])
-                                        ])
-                                    ]), pnlNode,
-                                    createEl('div', { className: 'text-center text-[9px] font-bold text-slate-500' }, [`${Math.round(dayAvg / 10 * 100)}%`])
+                                // 单元格头部：左大字号日期，中笔数，右得分
+                                cell = createEl('div', { className: `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] p-2 min-h-[90px] flex flex-col justify-between ${borderBg} ${isCur ? '' : 'opacity-40'}`, dataAction: 'open-modal', dataValue: str }, [
+                                    createEl('div', { className: 'flex justify-between items-center w-full' }, [
+                                        createEl('span', { className: 'text-sm font-black text-slate-800 dark:text-slate-100' }, [cur.getDate()]),
+                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-slate-200/80 dark:bg-slate-700/80 rounded text-slate-700 dark:text-slate-300 font-bold' }, [`${recs.length}笔`]),
+                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-orange-300 rounded text-slate-900 font-bold' }, [`均分: ${dayAvg.toFixed(1)}`])
+                                    ]),
+                                    centerNode
                                 ]);
                             } else {
-                                // 无交易记录的日期单元格
-                                cell = createEl('div', { className: `border border-slate-100 bg-white min-h-[100px] p-2 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900/20 ${isCur ? 'text-slate-400' : 'opacity-20'}` }, [
-                                    createEl('div', { className: 'flex justify-between' }, [createEl('span', { className: 'text-xs font-bold' }, [cur.getDate()]), createEl('span', { className: 'text-[9px]' }, [`周${CONSTANTS.WEEKDAYS[cur.getDay()]}`])]),
-                                    createEl('div', { className: 'text-center text-[10px] italic text-slate-300 select-none' }, ['未交易'])
+                                // 无交易记录的日期单元格：「未交易」正中间居中
+                                cell = createEl('div', { className: `border border-slate-100 bg-white min-h-[90px] p-2 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900/20 ${isCur ? 'text-slate-400' : 'opacity-20'}` }, [
+                                    createEl('div', { className: 'flex justify-between items-center w-full' }, [
+                                        createEl('span', { className: 'text-sm font-bold text-slate-700 dark:text-slate-300' }, [cur.getDate()]),
+                                        createEl('span', { className: 'text-[9px] text-slate-400 font-semibold' }, [`周${CONSTANTS.WEEKDAYS[cur.getDay()]}`])
+                                    ]),
+                                    createEl('div', { className: 'my-auto text-center flex items-center justify-center' }, [
+                                        createEl('span', { className: 'text-[11px] italic text-slate-300 dark:text-slate-600 select-none' }, ['未交易'])
+                                    ])
                                 ]);
                             }
                             frag.appendChild(cell); iter.setDate(iter.getDate() + 1);
@@ -1097,25 +1108,25 @@
                         // 跳过周末 (周六、周日)
                         iter.setDate(iter.getDate() + 2);
 
-                        // 渲染周汇总列 (计算本周所有交易日的日均分的平均值)
+                        // 渲染周汇总列
                         const weekScore = weekValidDays > 0 ? weekDailyAvgSum : 0;
                         const weekClass = weekR > 0 ? "border-indigo-100 bg-indigo-50/20 text-indigo-800 dark:border-indigo-900/60 dark:bg-indigo-950/20 dark:text-indigo-300" : weekR < 0 ? "border-amber-200 bg-amber-50/20 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300" : "border-slate-100 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/40";
-                        
-                        frag.appendChild(createEl('div', { className: `border rounded-xl p-2.5 min-h-[100px] flex flex-col justify-between text-center ${weekClass}` }, [
+
+                        frag.appendChild(createEl('div', { className: `border rounded-xl p-2.5 min-h-[90px] flex flex-col justify-between text-center ${weekClass}` }, [
                             createEl('span', { className: 'text-[9px] font-extrabold tracking-widest text-slate-400 uppercase' }, ['周汇总']),
                             createEl('div', { className: 'my-auto flex flex-col gap-0.5' }, [
                                 createEl('div', { className: 'text-[9px] font-bold text-slate-500' }, [`共 ${weekTradeCount} 笔`]),
-                                // 【修改点】：将周总分改为紫色 (text-purple-600)，加粗 (font-black)，并稍微放大字号 (text-xs) 以突出显示
+                                createEl('div', { className: `text-xs font-black ${weekPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}` }, [`${weekPnL >= 0 ? '+$' : '-$'}${Math.abs(weekPnL).toFixed(2)}`]),
                                 createEl('div', { className: 'text-xs font-black text-purple-600 dark:text-purple-400' }, [`周总分: ${weekScore.toFixed(2)}`]),
                                 createEl('div', { className: `text-[9px] font-bold text-slate-500` }, [`${weekR >= 0 ? '+' : ''}${weekR.toFixed(2)} R`])
                             ])
                         ]));
 
-                        if (!hasCurMonth && w > 3) break; // 优化：如果已经渲染完当前月且超过4周，提前结束
+                        if (!hasCurMonth && w > 3) break;
                     }
 
                     grid.appendChild(frag);
-                    this.tradeLog(); // 日历渲染完毕后刷新列表
+                    this.tradeLog();
                 },
 
                 // 渲染交易记录明细表及分页控件
@@ -1339,10 +1350,21 @@
                     const session = DOMCache.get('trade-session').value;
                     const score = DOMCache.get('total-score-display').textContent;
                     const reflection = DOMCache.get('reflection').value.trim() || "无";
-                    let disc = 0, qual = (s.s1 ? 1 : 0) + (s.s2 ? 1 : 0) + (s.s3 ? 1 : 0) + (s.q5 ? 1 : 0);
+
+                    // 修改 saveRecord 中纪律分和质量分的算分逻辑：
+                    let disc = 0, qual = 0;
                     const hasFull = s.s1 && s.s2 && s.s3;
-                    if (hasFull && s.e1 === 'yes') disc = parseInt(s.d1 || 0) + parseInt(s.d2 || 0);
-                    else if (!hasFull && s.e1 === 'no') disc = 6; // 空仓守纪给予纪律满分
+                    if (!hasFull && s.e1 === 'no') {
+                        disc = 6;  // 空仓守纪：纪律分 6 分
+                        qual = 0;  // 空仓守纪：质量分 0 分
+                    } else if (hasFull && s.e1 === 'yes') {
+                        disc = parseInt(s.d1 || 0) + parseInt(s.d2 || 0);
+                        qual = (s.s1 ? 1 : 0) + (s.s2 ? 1 : 0) + (s.s3 ? 1 : 0) + (s.q5 ? 1 : 0);
+                    } else {
+                        disc = 0;
+                        qual = (s.s1 ? 1 : 0) + (s.s2 ? 1 : 0) + (s.s3 ? 1 : 0) + (s.q5 ? 1 : 0);
+                    }
+
 
                     const risk = parseFloat(DOMCache.get('planned-risk').value) || 0;
                     const size = parseFloat(DOMCache.get('entry-size').value) || 1;
