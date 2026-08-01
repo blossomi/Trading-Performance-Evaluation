@@ -1112,24 +1112,41 @@
                         // 跳过周末 (周六、周日)
                         iter.setDate(iter.getDate() + 2);
 
-                        // 渲染周汇总列
-                        const weekScore = weekValidDays > 0 ? weekDailyAvgSum : 0;
-                        const weekClass = weekR > 0
-                            ? "border-indigo-100 bg-indigo-50/20 text-indigo-800 dark:border-indigo-900/60 dark:bg-indigo-950/20 dark:text-indigo-300"
-                            : weekR < 0
-                                ? "border-amber-200 bg-amber-50/20 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300"
-                                : "border-slate-100 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/40";
+
+                        // 渲染周汇总列：判定本周是否有交易数据
+                        let weekContentNode;
+                        if (weekTradeCount > 0) {
+                            const weekScore = weekValidDays > 0 ? weekDailyAvgSum : 0;
+                            weekContentNode = createEl('div', { className: 'flex-1 flex flex-col justify-center items-center text-center whitespace-nowrap' }, [
+                                createEl('div', { className: `text-xs sm:text-sm font-black ${weekPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}` }, [`${weekPnL >= 0 ? '+$' : '-$'}${Math.abs(weekPnL).toFixed(2)}`]),
+                                createEl('div', { className: 'text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400' }, [`${weekScore.toFixed(1)}分 · ${weekR >= 0 ? '+' : ''}${weekR.toFixed(2)}R`])
+                            ]);
+                        } else {
+                            // 本周无交易数据：中间置空，不显示任何指标
+                            weekContentNode = createEl('div', { className: 'flex-1 flex items-center justify-center text-center whitespace-nowrap' }, [
+                                createEl('span', { className: 'text-[10px] sm:text-[11px] italic text-slate-300 dark:text-slate-600 select-none' }, ['-'])
+                            ]);
+                        }
+
+                        const weekClass = weekTradeCount === 0
+                            ? "border-slate-100 bg-slate-50/20 dark:border-slate-800 dark:bg-slate-900/20"
+                            : weekR > 0
+                                ? "border-indigo-100 bg-indigo-50/20 text-indigo-800 dark:border-indigo-900/60 dark:bg-indigo-950/20 dark:text-indigo-300"
+                                : weekR < 0
+                                    ? "border-amber-200 bg-amber-50/20 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300"
+                                    : "border-slate-100 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/40";
 
                         frag.appendChild(createEl('div', { className: `border rounded-xl p-1.5 sm:p-2.5 h-[88px] sm:h-[96px] flex flex-col justify-between text-center overflow-hidden ${weekClass}` }, [
-                            createEl('div', { className: 'flex-1 flex flex-col justify-center gap-0.5 whitespace-nowrap' }, [
-                                createEl('div', { className: 'text-[8px] sm:text-[9px] font-bold text-slate-500' }, [`共 ${weekTradeCount} 笔`]),
-                                createEl('div', { className: `text-xs sm:text-sm font-black ${weekPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}` }, [`${weekPnL >= 0 ? '+$' : '-$'}${Math.abs(weekPnL).toFixed(2)}`]),
-                                createEl('div', { className: 'text-[10px] sm:text-xs font-black text-purple-600 dark:text-purple-400' }, [`周总分: ${weekScore.toFixed(2)}`]),
-                                createEl('div', { className: `text-[8px] sm:text-[9px] font-bold text-slate-500` }, [`${weekR >= 0 ? '+' : ''}${weekR.toFixed(2)} R · `, `共 ${weekTradeCount} 笔`])
-                            ])
+                            createEl('div', { className: 'h-5 flex items-center justify-center w-full whitespace-nowrap' }, [
+                                createEl('span', { className: 'text-[8px] sm:text-[9px] font-extrabold tracking-wider text-slate-400 uppercase' }, [
+                                    weekTradeCount > 0 ? `周汇总 (${weekTradeCount}笔)` : '周汇总'
+                                ])
+                            ]),
+                            weekContentNode
                         ]));
 
                         if (!hasCurMonth && w > 3) break;
+
                     }
 
                     grid.appendChild(frag);
