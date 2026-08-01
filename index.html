@@ -464,7 +464,7 @@
                 <div class="min-w-[560px] sm:min-w-[650px] space-y-1.5 sm:space-y-2">
                     <!-- 星期表头 -->
                     <div
-                        class="grid grid-cols-6 sm:grid-cols-7 gap-1 sm:gap-2 text-center text-[8px] sm:text-[10px] font-bold tracking-wider text-slate-500 py-1.5 sm:py-2 uppercase bg-slate-50 rounded-lg dark:bg-slate-950 dark:text-slate-400">
+                        class="grid grid-cols-6 gap-1 sm:gap-2 text-center text-[8px] sm:text-[10px] font-bold tracking-wider text-slate-500 py-1.5 sm:py-2 uppercase bg-slate-50 rounded-lg dark:bg-slate-950 dark:text-slate-400">
                         <div>MON</div>
                         <div>TUE</div>
                         <div>WED</div>
@@ -473,7 +473,7 @@
                         <div class="text-indigo-600 dark:text-indigo-400">Weekly R</div>
                     </div>
                     <!-- 动态生成的日历单元格将插入此处 -->
-                    <div id="calendar-grid" class="grid grid-cols-6 sm:grid-cols-7 gap-1.5 sm:gap-2 text-[10px] sm:text-xs"></div>
+                    <div id="calendar-grid" class="grid grid-cols-6 gap-1 sm:gap-2 text-[10px] sm:text-xs"></div>
                 </div>
             </div>
 
@@ -1075,30 +1075,30 @@
                                 const borderBg = isBad ? "border-2 border-rose-400 bg-rose-100 text-rose-950 dark:border-rose-600/80 dark:bg-rose-950/30 dark:text-rose-300" : "border border-emerald-200 bg-emerald-50/35 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300";
 
                                 // 中间内容：有实际交易显示盈亏/R倍数，空仓/错失则居中展示文字
-                                const centerNode = hasTrade ? createEl('div', { className: 'my-auto text-center flex flex-col justify-center items-center gap-0.5' }, [
+                                const centerNode = hasTrade ? createEl('div', { className: 'my-auto text-center flex flex-col justify-center items-center' }, [
                                     createEl('div', { className: `text-sm font-black ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}` }, [`${pnl >= 0 ? '+$' : '-$'}${Math.abs(pnl).toFixed(2)}`]),
                                     createEl('div', { className: 'text-[10px] font-bold text-slate-500' }, [`${r >= 0 ? '+' : ''}${r.toFixed(2)} R`])
-                                ]) : createEl('div', { className: 'my-auto text-center flex items-center justify-center h-full' }, [
-                                    createEl('span', { className: `text-xs font-bold whitespace-nowrap ${hasMissed ? 'text-rose-600' : 'text-slate-500 italic'}` }, [hasMissed ? '错失交易' : '空仓守纪'])
+                                ]) : createEl('div', { className: 'my-auto text-center flex items-center justify-center' }, [
+                                    createEl('span', { className: `text-xs ${hasMissed ? 'text-rose-600 font-bold' : 'text-slate-500 font-bold italic'}` }, [hasMissed ? '错失交易' : '空仓守纪'])
                                 ]);
 
                                 // 单元格头部：左大字号日期，中笔数，右得分
-                                cell = createEl('div', { className: `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] p-2 min-h-[80px] sm:min-h-[90px] flex flex-col justify-between ${borderBg} ${isCur ? '' : 'opacity-40'}`, dataAction: 'open-modal', dataValue: str }, [
-                                    createEl('div', { className: 'flex justify-between items-baseline w-full gap-1' }, [
-                                        createEl('span', { className: 'text-sm font-black text-slate-800 dark:text-slate-100 whitespace-nowrap' },[String(cur.getDate())]),
-                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-slate-200/80 dark:bg-slate-700/80 rounded text-slate-700 dark:text-slate-300 font-bold whitespace-nowrap' }, [`${recs.length}笔`]),
-                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-orange-300 rounded text-slate-900 font-bold whitespace-nowrap' }, [`${dayAvg.toFixed(1)}`])
+                                cell = createEl('div', { className: `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] p-2 min-h-[90px] flex flex-col justify-between ${borderBg} ${isCur ? '' : 'opacity-40'}`, dataAction: 'open-modal', dataValue: str }, [
+                                    createEl('div', { className: 'flex justify-between items-center w-full' }, [
+                                        createEl('span', { className: 'text-sm font-black text-slate-800 dark:text-slate-100' },[String(cur.getDate())]),
+                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-slate-200/80 dark:bg-slate-700/80 rounded text-slate-700 dark:text-slate-300 font-bold' }, [`${recs.length}笔`]),
+                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-orange-300 rounded text-slate-900 font-bold' }, [`${dayAvg.toFixed(1)}`])
                                     ]),
                                     centerNode
                                 ]);
                             } else {
                                 // 无交易记录的日期单元格：「未交易」正中间居中
-                                cell = createEl('div', { className: `border border-slate-100 bg-white min-h-[80px] sm:min-h-[90px] p-2 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900/20 ${isCur ? 'text-slate-400' : 'opacity-20'}` }, [
-                                    createEl('div', { className: 'flex justify-between items-baseline w-full gap-1' }, [
-                                        createEl('span', { className: 'text-sm font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap' }, [String(cur.getDate())]),
-                                        createEl('span', { className: 'text-[9px] text-slate-400 font-semibold whitespace-nowrap' }, [`周${CONSTANTS.WEEKDAYS[cur.getDay()]}`])
+                                cell = createEl('div', { className: `border border-slate-100 bg-white min-h-[90px] p-2 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900/20 ${isCur ? 'text-slate-400' : 'opacity-20'}` }, [
+                                    createEl('div', { className: 'flex justify-between items-center w-full' }, [
+                                        createEl('span', { className: 'text-sm font-bold text-slate-700 dark:text-slate-300' }, [String(cur.getDate())]),
+                                        createEl('span', { className: 'text-[9px] text-slate-400 font-semibold' }, [`周${CONSTANTS.WEEKDAYS[cur.getDay()]}`])
                                     ]),
-                                    createEl('div', { className: 'my-auto text-center flex items-center justify-center h-full' }, [
+                                    createEl('div', { className: 'my-auto text-center flex items-center justify-center' }, [
                                         createEl('span', { className: 'text-[11px] italic text-slate-300 dark:text-slate-600 select-none' }, ['未交易'])
                                     ])
                                 ]);
