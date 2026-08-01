@@ -1017,7 +1017,7 @@
                     DOMCache.get('total-score-display').textContent = finalScore;
                 },
 
-                // 渲染交易日历 (包含日视图和周汇总)
+                // 渲染交易日历 (包含日视图和周汇总 - 已完美适配移动端)
                 calendar() {
                     const { year, month } = StateManager.calendar;
                     DOMCache.get('calendar-month-year').textContent = `${year}年 ${month + 1}月`;
@@ -1072,34 +1072,38 @@
                                 }
 
                                 const isBad = dayAvg < 4; // 当日平均分低于 4 分标记为表现不佳
-                                const borderBg = isBad ? "border-2 border-rose-400 bg-rose-100 text-rose-950 dark:border-rose-600/80 dark:bg-rose-950/30 dark:text-rose-300" : "border border-emerald-200 bg-emerald-50/35 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300";
+                                const borderBg = isBad
+                                    ? "border-2 border-rose-400 bg-rose-100 text-rose-950 dark:border-rose-600/80 dark:bg-rose-950/30 dark:text-rose-300"
+                                    : "border border-emerald-200 bg-emerald-50/35 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-300";
 
-                                // 中间内容：有实际交易显示盈亏/R倍数，空仓/错失则居中展示文字
-                                const centerNode = hasTrade ? createEl('div', { className: 'my-auto text-center flex flex-col justify-center items-center' }, [
-                                    createEl('div', { className: `text-sm font-black ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}` }, [`${pnl >= 0 ? '+$' : '-$'}${Math.abs(pnl).toFixed(2)}`]),
-                                    createEl('div', { className: 'text-[10px] font-bold text-slate-500' }, [`${r >= 0 ? '+' : ''}${r.toFixed(2)} R`])
-                                ]) : createEl('div', { className: 'my-auto text-center flex items-center justify-center' }, [
-                                    createEl('span', { className: `text-xs ${hasMissed ? 'text-rose-600 font-bold' : 'text-slate-500 font-bold italic'}` }, [hasMissed ? '错失交易' : '空仓守纪'])
+                                // 正中间内容区域：使用 flex-1 绝对垂直/水平居中，加 whitespace-nowrap 防止错行高低差
+                                const centerNode = hasTrade ? createEl('div', { className: 'flex-1 flex flex-col items-center justify-center text-center whitespace-nowrap' }, [
+                                    createEl('div', { className: `text-xs sm:text-sm font-black ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}` }, [`${pnl >= 0 ? '+$' : '-$'}${Math.abs(pnl).toFixed(2)}`]),
+                                    createEl('div', { className: 'text-[9px] sm:text-[10px] font-bold text-slate-500' }, [`${r >= 0 ? '+' : ''}${r.toFixed(2)} R`])
+                                ]) : createEl('div', { className: 'flex-1 flex items-center justify-center text-center whitespace-nowrap' }, [
+                                    createEl('span', { className: `text-[11px] sm:text-xs ${hasMissed ? 'text-rose-600 font-bold' : 'text-slate-500 font-bold italic'}` }, [hasMissed ? '错失交易' : '空仓守纪'])
                                 ]);
 
-                                // 单元格头部：左大字号日期，中笔数，右得分
-                                cell = createEl('div', { className: `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] p-2 min-h-[90px] flex flex-col justify-between ${borderBg} ${isCur ? '' : 'opacity-40'}`, dataAction: 'open-modal', dataValue: str }, [
-                                    createEl('div', { className: 'flex justify-between items-center w-full' }, [
-                                        createEl('span', { className: 'text-sm font-black text-slate-800 dark:text-slate-100' },[String(cur.getDate())]),
-                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-slate-200/80 dark:bg-slate-700/80 rounded text-slate-700 dark:text-slate-300 font-bold' }, [`${recs.length}笔`]),
-                                        createEl('span', { className: 'text-[9px] px-1.5 py-0.5 bg-orange-300 rounded text-slate-900 font-bold' }, [`${dayAvg.toFixed(1)}`])
+                                // 单元格顶部：固定高度 h-5 防止撑高高低差；加 whitespace-nowrap 解决笔数换行问题
+                                cell = createEl('div', { className: `border rounded-xl transition-all cursor-pointer hover:scale-[1.01] p-1.5 sm:p-2 h-[88px] sm:h-[96px] flex flex-col justify-between ${borderBg} ${isCur ? '' : 'opacity-40'}`, dataAction: 'open-modal', dataValue: str }, [
+                                    createEl('div', { className: 'h-5 flex justify-between items-center w-full whitespace-nowrap overflow-hidden' }, [
+                                        createEl('span', { className: 'text-xs sm:text-sm font-black shrink-0 text-slate-800 dark:text-slate-100' }, [String(cur.getDate())]),
+                                        createEl('div', { className: 'flex items-center gap-1 shrink-0' }, [
+                                            createEl('span', { className: 'text-[8px] sm:text-[9px] px-1 py-0.5 bg-slate-200/80 dark:bg-slate-700/80 rounded text-slate-700 dark:text-slate-300 font-bold' }, [`${recs.length}笔`]),
+                                            createEl('span', { className: 'text-[8px] sm:text-[9px] px-1 py-0.5 bg-orange-300 rounded text-slate-900 font-bold' }, [`${dayAvg.toFixed(1)}`])
+                                        ])
                                     ]),
                                     centerNode
                                 ]);
                             } else {
-                                // 无交易记录的日期单元格：「未交易」正中间居中
-                                cell = createEl('div', { className: `border border-slate-100 bg-white min-h-[90px] p-2 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900/20 ${isCur ? 'text-slate-400' : 'opacity-20'}` }, [
-                                    createEl('div', { className: 'flex justify-between items-center w-full' }, [
-                                        createEl('span', { className: 'text-sm font-bold text-slate-700 dark:text-slate-300' }, [String(cur.getDate())]),
-                                        createEl('span', { className: 'text-[9px] text-slate-400 font-semibold' }, [`周${CONSTANTS.WEEKDAYS[cur.getDay()]}`])
+                                // 无交易记录的日期单元格
+                                cell = createEl('div', { className: `border border-slate-100 bg-white h-[88px] sm:h-[96px] p-1.5 sm:p-2 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-900/20 ${isCur ? 'text-slate-400' : 'opacity-20'}` }, [
+                                    createEl('div', { className: 'h-5 flex justify-between items-center w-full whitespace-nowrap' }, [
+                                        createEl('span', { className: 'text-xs sm:text-sm font-bold shrink-0 text-slate-700 dark:text-slate-300' }, [String(cur.getDate())]),
+                                        createEl('span', { className: 'text-[8px] sm:text-[9px] text-slate-400 font-semibold shrink-0' }, [`周${CONSTANTS.WEEKDAYS[cur.getDay()]}`])
                                     ]),
-                                    createEl('div', { className: 'my-auto text-center flex items-center justify-center' }, [
-                                        createEl('span', { className: 'text-[11px] italic text-slate-300 dark:text-slate-600 select-none' }, ['未交易'])
+                                    createEl('div', { className: 'flex-1 flex items-center justify-center text-center whitespace-nowrap' }, [
+                                        createEl('span', { className: 'text-[10px] sm:text-[11px] italic text-slate-300 dark:text-slate-600 select-none' }, ['未交易'])
                                     ])
                                 ]);
                             }
@@ -1110,15 +1114,19 @@
 
                         // 渲染周汇总列
                         const weekScore = weekValidDays > 0 ? weekDailyAvgSum : 0;
-                        const weekClass = weekR > 0 ? "border-indigo-100 bg-indigo-50/20 text-indigo-800 dark:border-indigo-900/60 dark:bg-indigo-950/20 dark:text-indigo-300" : weekR < 0 ? "border-amber-200 bg-amber-50/20 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300" : "border-slate-100 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/40";
+                        const weekClass = weekR > 0
+                            ? "border-indigo-100 bg-indigo-50/20 text-indigo-800 dark:border-indigo-900/60 dark:bg-indigo-950/20 dark:text-indigo-300"
+                            : weekR < 0
+                                ? "border-amber-200 bg-amber-50/20 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300"
+                                : "border-slate-100 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/40";
 
-                        frag.appendChild(createEl('div', { className: `border rounded-xl p-2.5 min-h-[90px] flex flex-col justify-between text-center ${weekClass}` }, [
-                            createEl('span', { className: 'text-[9px] font-extrabold tracking-widest text-slate-400 uppercase' }, ['周汇总']),
-                            createEl('div', { className: 'my-auto flex flex-col gap-0.5' }, [
-                                createEl('div', { className: 'text-[9px] font-bold text-slate-500' }, [`共 ${weekTradeCount} 笔`]),
-                                createEl('div', { className: `text-xs font-black ${weekPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}` }, [`${weekPnL >= 0 ? '+$' : '-$'}${Math.abs(weekPnL).toFixed(2)}`]),
-                                createEl('div', { className: 'text-xs font-black text-purple-600 dark:text-purple-400' }, [`周总分: ${weekScore.toFixed(2)}`]),
-                                createEl('div', { className: `text-[9px] font-bold text-slate-500` }, [`${weekR >= 0 ? '+' : ''}${weekR.toFixed(2)} R`])
+                        frag.appendChild(createEl('div', { className: `border rounded-xl p-1.5 sm:p-2.5 h-[88px] sm:h-[96px] flex flex-col justify-between text-center overflow-hidden ${weekClass}` }, [
+                            createEl('span', { className: 'text-[8px] sm:text-[9px] font-extrabold tracking-widest text-slate-400 uppercase h-4 flex items-center justify-center' }, ['周汇总']),
+                            createEl('div', { className: 'flex-1 flex flex-col justify-center gap-0.5 whitespace-nowrap' }, [
+                                createEl('div', { className: 'text-[8px] sm:text-[9px] font-bold text-slate-500' }, [`共 ${weekTradeCount} 笔`]),
+                                createEl('div', { className: `text-xs sm:text-sm font-black ${weekPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}` }, [`${weekPnL >= 0 ? '+$' : '-$'}${Math.abs(weekPnL).toFixed(2)}`]),
+                                createEl('div', { className: 'text-[10px] sm:text-xs font-black text-purple-600 dark:text-purple-400' }, [`周总分: ${weekScore.toFixed(2)}`]),
+                                createEl('div', { className: `text-[8px] sm:text-[9px] font-bold text-slate-500` }, [`${weekR >= 0 ? '+' : ''}${weekR.toFixed(2)} R`])
                             ])
                         ]));
 
@@ -1128,6 +1136,7 @@
                     grid.appendChild(frag);
                     this.tradeLog();
                 },
+
 
                 // 渲染交易记录明细表及分页控件
                 tradeLog() {
