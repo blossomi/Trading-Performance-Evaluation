@@ -1121,12 +1121,11 @@
                                 : "border-slate-100 bg-slate-50/40 dark:border-slate-800 dark:bg-slate-900/40";
 
                         frag.appendChild(createEl('div', { className: `border rounded-xl p-1.5 sm:p-2.5 h-[88px] sm:h-[96px] flex flex-col justify-between text-center overflow-hidden ${weekClass}` }, [
-                            createEl('span', { className: 'text-[8px] sm:text-[9px] font-extrabold tracking-widest text-slate-400 uppercase h-4 flex items-center justify-center' }, ['周汇总']),
                             createEl('div', { className: 'flex-1 flex flex-col justify-center gap-0.5 whitespace-nowrap' }, [
                                 createEl('div', { className: 'text-[8px] sm:text-[9px] font-bold text-slate-500' }, [`共 ${weekTradeCount} 笔`]),
                                 createEl('div', { className: `text-xs sm:text-sm font-black ${weekPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}` }, [`${weekPnL >= 0 ? '+$' : '-$'}${Math.abs(weekPnL).toFixed(2)}`]),
                                 createEl('div', { className: 'text-[10px] sm:text-xs font-black text-purple-600 dark:text-purple-400' }, [`周总分: ${weekScore.toFixed(2)}`]),
-                                createEl('div', { className: `text-[8px] sm:text-[9px] font-bold text-slate-500` }, [`${weekR >= 0 ? '+' : ''}${weekR.toFixed(2)} R`])
+                                createEl('div', { className: `text-[8px] sm:text-[9px] font-bold text-slate-500` }, [`${weekR >= 0 ? '+' : ''}${weekR.toFixed(2)} R · `, `共 ${weekTradeCount} 笔`])
                             ])
                         ]));
 
